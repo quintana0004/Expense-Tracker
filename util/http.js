@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BACKEND_URL = "https://expense-app-e18a1-default-rtdb.firebaseio.com";
+const BACKEND_URL = "https://expense-1511c-default-rtdb.firebaseio.com";
 
 export async function storeExpense(expenseData) {
   const response = await axios.post(
