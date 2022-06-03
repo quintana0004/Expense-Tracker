@@ -6,8 +6,13 @@ import { StyleSheet, Text, View } from "react-native";
 import ManageExpenses from "./screens/ManageExpenses";
 import RecentExpenses from "./screens/RecentExpenses";
 import AllExpenses from "./screens/AllExpenses";
+import BudgetCalendar from "./screens/BudgetCalendar";
+import BudgetWeek from "./screens/BudgetWeek";
+import ManageAddBudgetCalendar from "./screens/ManageAddBudgetCalendar";
+import ManageOtherBudgetCalendar from "./screens/ManageOtherBudgetCalendar";
+import BudgetWeekAdd from "./screens/BudgetWeekAdd";
 import { GlobalStyles } from "./constants/style";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, SimpleLineIcons, FontAwesome5 } from "@expo/vector-icons";
 import IconButton from "./components/UI/IconButton";
 import ExpensesContextProvider from "./store/expense-context";
 
@@ -21,11 +26,24 @@ function ExpensesOverview() {
       screenOptions={({ navigation }) => ({
         headerStyle: { backgroundColor: GlobalStyles.colors.primary500 },
         headerTintColor: "white",
-        tabBarStyle: { backgroundColor: GlobalStyles.colors.primary500 },
+        tabBarStyle: {
+          backgroundColor: GlobalStyles.colors.primary500,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          //marginBottom: 10,
+          //marginTop: 10,
+          marginLeft: 5,
+          marginRight: 5,
+          paddingBottom: 10,
+          paddingTop: 5,
+          position: "absolute",
+          height: 72,
+          borderTopColor: GlobalStyles.colors.primary500,
+        },
         tabBarActiveTintColor: GlobalStyles.colors.accent500,
         headerRight: ({ tintColor }) => (
           <IconButton
-            icon="add"
+            icon="add-circle"
             size={24}
             color={tintColor}
             onPress={() => {
@@ -53,7 +71,30 @@ function ExpensesOverview() {
           title: "All Expenses",
           tabBarLabel: "All Expenses",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" color={color} size={size} />
+            <SimpleLineIcons name="wallet" color={color} size={size} />
+          ),
+        }}
+      />
+
+      <BottomTab.Screen
+        name="BudgetCalendar"
+        component={BudgetCalendar}
+        options={{
+          title: "Budget Calendar",
+          tabBarLabel: "Budget Calendar",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar" size={size} color={color} />
+          ),
+        }}
+      />
+      <BottomTab.Screen
+        name="BudgetWeek"
+        component={BudgetWeek}
+        options={{
+          title: "Budget Week",
+          tabBarLabel: "Budget Week",
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome5 name="coins" size={size} color={color} />
           ),
         }}
       />
@@ -84,6 +125,27 @@ export default function App() {
               options={{
                 presentation: "modal",
               }}
+            />
+            <Stack.Screen
+              name="ManageAddBudgetCalendar"
+              component={ManageAddBudgetCalendar}
+              options={{
+                presentation: "modal",
+                title: "Add Payment",
+              }}
+            />
+            <Stack.Screen
+              name="ManageOtherBudgetCalendar"
+              component={ManageOtherBudgetCalendar}
+              options={{
+                presentation: "modal",
+              }}
+            />
+
+            <Stack.Screen
+              name="BudgetWeekAdd"
+              component={BudgetWeekAdd}
+              options={{ presentation: "modal", title: "" }}
             />
           </Stack.Navigator>
         </NavigationContainer>
