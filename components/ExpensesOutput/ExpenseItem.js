@@ -33,7 +33,7 @@ const style = StyleSheet.create({
     opacity: 0.75,
   },
   expenseItem: {
-    padding: 12,
+    padding: 11,
     marginVertical: 8,
     backgroundColor: GlobalStyles.colors.primary500,
     flexDirection: "row",
