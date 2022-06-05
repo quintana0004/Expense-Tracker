@@ -2,7 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { StyleSheet, Text, View } from "react-native";
+//Screens
 import ManageExpenses from "./screens/ManageExpenses";
 import RecentExpenses from "./screens/RecentExpenses";
 import AllExpenses from "./screens/AllExpenses";
@@ -11,6 +11,9 @@ import BudgetWeek from "./screens/BudgetWeek";
 import ManageAddBudgetCalendar from "./screens/ManageAddBudgetCalendar";
 import ManageOtherBudgetCalendar from "./screens/ManageOtherBudgetCalendar";
 import BudgetWeekAdd from "./screens/BudgetWeekAdd";
+import Login from "./screens/Login";
+import SignIn from "./screens/SignIn";
+//Decoration and Context API
 import { GlobalStyles } from "./constants/style";
 import { Ionicons, SimpleLineIcons, FontAwesome5 } from "@expo/vector-icons";
 import IconButton from "./components/UI/IconButton";
@@ -51,6 +54,16 @@ function ExpensesOverview() {
             }}
           />
         ),
+        headerLeft: ({ tintColor }) => (
+          <IconButton
+            icon="power-outline"
+            size={24}
+            color={tintColor}
+            onPress={() => {
+              navigation.navigate("Login");
+            }}
+          />
+        ),
       })}
     >
       <BottomTab.Screen
@@ -62,6 +75,7 @@ function ExpensesOverview() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="hourglass" color={color} size={size} />
           ),
+          headerTitleAlign: "center",
         }}
       />
       <BottomTab.Screen
@@ -73,6 +87,7 @@ function ExpensesOverview() {
           tabBarIcon: ({ color, size }) => (
             <SimpleLineIcons name="wallet" color={color} size={size} />
           ),
+          headerTitleAlign: "center",
         }}
       />
 
@@ -85,6 +100,7 @@ function ExpensesOverview() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar" size={size} color={color} />
           ),
+          headerTitleAlign: "center",
         }}
       />
       <BottomTab.Screen
@@ -96,6 +112,7 @@ function ExpensesOverview() {
           tabBarIcon: ({ color, size }) => (
             <FontAwesome5 name="coins" size={size} color={color} />
           ),
+          headerTitleAlign: "center",
         }}
       />
     </BottomTab.Navigator>
@@ -146,6 +163,18 @@ export default function App() {
               name="BudgetWeekAdd"
               component={BudgetWeekAdd}
               options={{ presentation: "modal", title: "" }}
+            />
+
+            <Stack.Screen
+              name="Login"
+              component={Login}
+              options={{ headerShown: false }}
+            />
+
+            <Stack.Screen
+              name="SignIn"
+              component={SignIn}
+              options={{ headerShown: false }}
             />
           </Stack.Navigator>
         </NavigationContainer>
