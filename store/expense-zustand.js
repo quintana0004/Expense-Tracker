@@ -5,7 +5,11 @@ import produce from "immer";
 export const useExpense = create((set) => ({
   expenses: [],
   addExpense: (expenseData) =>
-    set((state) => ({ expenses: [...state.expenses, expenseData] })),
+    set(
+      produce((draft) => {
+        draft.expenses.push(expenseData);
+      })
+    ),
   setExpense: (expensesData) => set({ expenses: expensesData.reverse() }),
   deleteExpense: (id) =>
     set((state) => ({
@@ -49,7 +53,7 @@ export const useCalendar = create((set) => ({
       })
     ),
   setCalendar: (calendarData) => set({ calendar: calendarData }),
-  deleteCalendar: (index) =>
+  deleteCalendar: (index, date) =>
     set(
       produce((draft) => {
         draft.calendar[date].splice(index, 1);
@@ -71,8 +75,22 @@ export const useCalendar = create((set) => ({
 export const useBudget = create((set) => ({
   budget: [],
   addBudget: (budgetData) =>
-    set((state) => ({ budget: [...state.budget, budgetData] })),
-  setBudget: (budget) => set((state) => ({ budget: budget })),
+    set(
+      produce((draft) => {
+        draft.budget.push(budgetData);
+      })
+    ),
+  setBudget: (budgetData) => set({ budget: budgetData }),
+  updateBudgetBalance: (balance, index) =>
+    set(
+      produce((draft) => {
+        const updatableBudget = draft.budget[index];
+        const updatableItem = { ...updatableBudget, ...balance };
+        const updatedBudget = [...draft.budget];
+        updatedBudget[index] = updatableItem;
+        draft.budget = updatedBudget;
+      })
+    ),
 }));
 
 // useUser manages the new users that enters
@@ -84,10 +102,10 @@ export const useUser = create((set) => ({
 }));
 
 // This object will how the information will be saved
-export const user = {
-  email: useUser((state) => state.email),
-  password: useUser((state) => state.password),
-  expenses: useExpense((state) => state.expenses),
-  calendar: useCalendar((state) => state.calendar),
-  budget: useBudget((state) => state.budget),
-};
+// export const user = {
+//   email: useUser((state) => state.email),
+//   password: useUser((state) => state.password),
+//   expenses: useExpense((state) => state.expenses),
+//   calendar: useCalendar((state) => state.calendar),
+//   budget: useBudget((state) => state.budget),
+// };

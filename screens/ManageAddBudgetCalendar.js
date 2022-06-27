@@ -4,8 +4,12 @@ import { GlobalStyles } from "../constants/style";
 import Input from "../components/ManageExpense/Input";
 import Item from "../constants/calendar";
 import Button from "../components/UI/Button";
+import { useCalendar } from "../store/expense-zustand";
 
 function ManageAddBudgetCalendar({ navigation }) {
+  // --- Zustand Function ---
+  const addCalendar = useCalendar((state) => state.addCalendar);
+
   // Date input and validation
   const [date, setDate] = useState("");
   const [dateValidation, setDateValidation] = useState(false);
@@ -38,13 +42,9 @@ function ManageAddBudgetCalendar({ navigation }) {
     }
 
     setDate(date_Modified.toISOString().slice(0, 10));
+
     // III. Send that data to the dummy data
-    if (!Item.hasOwnProperty(date)) {
-      Item[date] = [];
-      Item[date].push({ title: title, amount: +amount, date: date });
-    } else {
-      Item[date].push({ title: title, amount: +amount, date: date });
-    }
+    addCalendar(title, +amount, date);
   }
 
   function onCancel() {

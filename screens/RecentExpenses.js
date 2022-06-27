@@ -6,18 +6,26 @@ import { getDateMinusDays } from "../util/date";
 import { fetchExpenses } from "../util/http";
 import LoadingOverlay from "../components/UI/LoadingOverlay";
 import ErrorOverlay from "../components/UI/ErrorOverlay";
+import expense from "../constants/expenses";
+import { useExpense } from "../store/expense-zustand";
 
-const RecentExpenses = () => {
+function RecentExpenses() {
+  //--- Zustand Functions ---
+  const setExpense = useExpense((state) => state.setExpense);
+  const expenses = useExpense((state) => state.expenses);
+
   const [isFetching, setIsFetching] = useState();
   const [error, setError] = useState();
-  const expensesCtx = useContext(ExpensesContext);
+  // const expensesCtx = useContext(ExpensesContext);
 
   useEffect(() => {
     async function getExpenses() {
       setIsFetching(true);
       try {
-        const expenses = await fetchExpenses();
-        expensesCtx.setExpenses(expenses);
+        // const expenses = await fetchExpenses();
+        // expensesCtx.setExpenses(expenses);
+
+        setExpense(expense);
       } catch (error) {
         setError("Could not fetch expenses!");
       }
@@ -25,7 +33,7 @@ const RecentExpenses = () => {
       setIsFetching(false);
     }
     getExpenses();
-  }, []);
+  }, [setExpense]);
 
   function errorHandler() {
     setError(null);
@@ -39,7 +47,13 @@ const RecentExpenses = () => {
     return <LoadingOverlay />;
   }
 
-  const recentExpenses = expensesCtx.expenses.filter((expense) => {
+  // const recentExpenses = expensesCtx.expenses.filter((expense) => {
+  //   const today = new Date();
+  //   const date7DaysAgo = getDateMinusDays(today, 7);
+  //   return expense.date > date7DaysAgo && expense.date <= today;
+  // });
+
+  const recentExpenses = expenses.filter((expense) => {
     const today = new Date();
     const date7DaysAgo = getDateMinusDays(today, 7);
     return expense.date > date7DaysAgo && expense.date <= today;
@@ -54,8 +68,6 @@ const RecentExpenses = () => {
       fallbackText="No expenses registered for the 7 days"
     />
   );
-};
-
-const style = StyleSheet.create({});
+}
 
 export default RecentExpenses;

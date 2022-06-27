@@ -1,17 +1,35 @@
-import react from "react";
+import react, { useState } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { GlobalStyles } from "../constants/style";
 import Input from "../components/ManageExpense/Input";
 import Button from "../components/UI/Button";
+import { useUser } from "../store/expense-zustand";
+import user from "../constants/user";
 
 function Login({ navigation }) {
+  // --- Zustand Function ---
+  const setUser = useUser((state) => state.setUser);
+
+  // --- Set the data ---
+  setUser(user.email, user.password);
+
+  // --- Verify the Email ---
+  const [verifyEmail, setVerifyEmail] = useState();
+  const [email, setEmail] = useState();
+
+  // --- Verify the Password ---
+  const [verifyPassword, setVerifyPassword] = useState();
+  const [password, setPassword] = useState();
+
   function enterAccount() {
+    // DO-SOMETHING
     return navigation.navigate("RecentExpenses");
   }
 
   function signInPage() {
     return navigation.navigate("SignIn");
   }
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Log In</Text>
@@ -21,11 +39,19 @@ function Login({ navigation }) {
           textInputConfig={{
             placeholder: "email@address.com",
             keyboardType: "email-address",
+            onChangeText: (email) => setEmail(email),
+            value: email,
           }}
         />
       </View>
       <View style={styles.box2}>
-        <Input label="Password" />
+        <Input
+          label="Password"
+          textInputConfig={{
+            onChangeText: (password) => setPassword(password),
+            value: password,
+          }}
+        />
       </View>
       <View style={styles.box3}>
         <Button onPress={enterAccount}>LOGIN</Button>

@@ -1,12 +1,53 @@
-import React, { useLayoutEffect } from "react";
+import React, { useLayoutEffect, useEffect, useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView } from "react-native";
 import { GlobalStyles } from "../constants/style";
 import { Calendar, CalendarList, Agenda } from "react-native-calendars";
 import item from "../constants/calendar";
 import BudgetCalendarItem from "../components/CalendarBudget/BudgetCalendarItem";
 import IconButton from "../components/UI/IconButton";
+import { useCalendar } from "../store/expense-zustand";
+import ErrorOverlay from "../components/UI/ErrorOverlay";
+import LoadingOverlay from "../components/UI/LoadingOverlay";
 
 function BudgetCalendar({ navigation }) {
+  // --- Zustand function ---
+  const setCalendar = useCalendar((state) => state.setCalendar);
+
+  // --- Zustand Data ---
+  const calendar = useCalendar((state) => state.calendar);
+
+  // --- Verify the data being received
+  const [isFetching, setIsFetching] = useState();
+  const [error, setError] = useState();
+
+  useEffect(() => {
+    async function getCalendar() {
+      setIsFetching(true);
+      try {
+        // const expenses = await fetchExpenses();
+        // expensesCtx.setExpenses(expenses);
+        setCalendar(item);
+      } catch (error) {
+        setError("Could not fetch calendar expenses!");
+      }
+
+      setIsFetching(false);
+    }
+    getCalendar();
+  }, [setCalendar]);
+
+  function errorHandler() {
+    setError(null);
+  }
+
+  if (error && !isFetching) {
+    return <ErrorOverlay message={error} onConfirm={errorHandler} />;
+  }
+
+  if (isFetching) {
+    return <LoadingOverlay />;
+  }
+
   function renderItem(itemData) {
     return (
       <BudgetCalendarItem
@@ -37,7 +78,7 @@ function BudgetCalendar({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <Agenda
-        items={item}
+        items={calendar}
         renderItem={renderItem}
         theme={{
           dotColor: "#CF9FFF",

@@ -4,18 +4,30 @@ import Item from "../constants/calendar";
 import Input from "../components/ManageExpense/Input";
 import Button from "../components/UI/Button";
 import { GlobalStyles } from "../constants/style";
+import { useCalendar } from "../store/expense-zustand";
+import { getStringFormatDate } from "../util/date";
 
 function ManageOtherBudgetCalendar({ route, navigation }) {
+  // --- Zustand Functions ---
+  const deleteCalendar = useCalendar((state) => state.deleteCalendar);
+  const updateCalendar = useCalendar((state) => state.updateCalendar);
+
+  // --- Zustand Data ---
+  const calendar = useCalendar((state) => state.calendar);
+
   // Receiving object
   const obj = route.params;
   const amountProvided = obj.amountKey;
   const dateProvided = obj.dateKey;
   const titleProvided = obj.titleKey;
 
+  // --- Date changed with string format ---
+  const dateString = getStringFormatDate(dateProvided);
+
   // Validate the change made
   // Date input and validation
-  const [date, setDate] = useState(dateProvided);
-  const [dateValidation, setDateValidation] = useState(false);
+  // const [date, setDate] = useState(dateProvided);
+  // const [dateValidation, setDateValidation] = useState(false);
 
   // Amount input and validation
   const [amount, setAmount] = useState(amountProvided.toString());
@@ -37,33 +49,27 @@ function ManageOtherBudgetCalendar({ route, navigation }) {
   // ---Verify and Update Button---
   function onVerifyUpdate() {
     //I. Set all the needed to be later be passed on the Item
-    const date_Modified = new Date(date);
     const amount_Modified = +amount;
 
     //II. Check that each value entered is valid
-    setDateValidation(!(date_Modified.toString() !== "Invalid Date"));
+    //setDateValidation(!(date_Modified.toString() !== "Invalid Date"));
     setAmountValidation(!(!isNaN(amount_Modified) && amount_Modified > 0));
     setTitleValidation(!(title.trim().length > 0));
 
-    if (amountValidation || dateValidation || titleValidation) {
+    if (amountValidation || titleValidation) {
       return setFormValid(true);
     }
 
-    setDate(date_Modified.toISOString().slice(0, 10));
+    //setDate(date_Modified.toISOString().slice(0, 10));
     // III. Send that data to the dummy data
-    if (Item.hasOwnProperty(date)) {
-      const len = Item[date].length;
+    if (calendar.hasOwnProperty(dateProvided)) {
+      const len = calendar[dateProvided].length;
       for (let i = 0; i < len; i++) {
         if (
-          Item[date][i].title === titleProvided &&
-          Item[date][i].amount === amountProvided
+          calendar[dateProvided][i].title === titleProvided &&
+          calendar[dateProvided][i].amount === amountProvided
         ) {
-          Item[date].splice(i, 1, {
-            title: title,
-            amount: amount_Modified,
-            date: date,
-          });
-
+          updateCalendar(title, amount_Modified, dateProvided, i);
           navigation.goBack();
         }
       }
@@ -73,29 +79,27 @@ function ManageOtherBudgetCalendar({ route, navigation }) {
   // ---Verify and Delete Button---
   function onVerifyDelete() {
     //I. Set all the needed to be later be passed on the Item
-    const date_Modified = new Date(date);
     const amount_Modified = +amount;
 
     //II. Check that each value entered is valid
-    setDateValidation(!(date_Modified.toString() !== "Invalid Date"));
+    //setDateValidation(!(date_Modified.toString() !== "Invalid Date"));
     setAmountValidation(!(!isNaN(amount_Modified) && amount_Modified > 0));
     setTitleValidation(!(title.trim().length > 0));
 
-    if (amountValidation || dateValidation || titleValidation) {
+    if (amountValidation || titleValidation) {
       return setFormValid(true);
     }
 
-    setDate(date_Modified.toISOString().slice(0, 10));
+    // setDate(date_Modified.toISOString().slice(0, 10));
     // III. Send that data to the dummy data
-    if (Item.hasOwnProperty(date)) {
-      const len = Item[date].length;
+    if (calendar.hasOwnProperty(dateProvided)) {
+      const len = calendar[dateProvided].length;
       for (let i = 0; i < len; i++) {
         if (
-          Item[date][i].title === titleProvided &&
-          Item[date][i].amount === amountProvided
+          calendar[dateProvided][i].title === titleProvided &&
+          calendar[dateProvided][i].amount === amountProvided
         ) {
-          Item[date].splice(i, 1);
-
+          deleteCalendar(i, dateProvided);
           navigation.goBack();
         }
       }
@@ -106,30 +110,17 @@ function ManageOtherBudgetCalendar({ route, navigation }) {
     <View style={styles.container}>
       <View style={styles.form}>
         <Text style={styles.title}>Important Payment</Text>
-        <View style={styles.inputContainer}>
-          <View style={styles.input}>
-            <Input
-              label="Date"
-              invalid={dateValidation}
-              textInputConfig={{
-                placeholder: "YYYY-MM-DD",
-                maxLength: 10,
-                onChangeText: (date) => setDate(date),
-                value: date,
-              }}
-            />
-          </View>
-          <View style={styles.input2}>
-            <Input
-              label="Amount"
-              invalid={amountValidation}
-              textInputConfig={{
-                keyboardType: "decimal-pad",
-                onChangeText: (amount) => setAmount(amount),
-                value: amount,
-              }}
-            />
-          </View>
+        <Text style={styles.date}>{dateString}</Text>
+        <View style={styles.input2}>
+          <Input
+            label="Amount"
+            invalid={amountValidation}
+            textInputConfig={{
+              keyboardType: "decimal-pad",
+              onChangeText: (amount) => setAmount(amount),
+              value: amount,
+            }}
+          />
         </View>
       </View>
       <View style={styles.input3}>
@@ -170,6 +161,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: GlobalStyles.colors.primary800,
   },
+  date: {
+    fontSize: 20,
+    color: "white",
+    marginVertical: 24,
+    textAlign: "center",
+  },
   form: {
     marginTop: 40,
   },
@@ -177,8 +174,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "white",
-    marginVertical: 24,
     textAlign: "center",
+    marginTop: 24,
   },
   inputContainer: {
     alignContent: "center",
@@ -192,10 +189,7 @@ const styles = StyleSheet.create({
     paddingRight: 0,
   },
   input2: {
-    paddingLeft: 0,
-    marginVertical: 10,
-    width: 200,
-    paddingRight: 30,
+    paddingHorizontal: 30,
   },
   input3: {
     paddingHorizontal: 30,

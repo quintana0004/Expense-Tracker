@@ -9,8 +9,16 @@ import ExpenseForm from "../components/ManageExpense/ExpenseForm";
 import { storeExpense, updateExpense, deleteExpense } from "../util/http";
 import LoadingOverlay from "../components/UI/LoadingOverlay";
 import ErrorOverlay from "../components/UI/ErrorOverlay";
+import { useExpense } from "../store/expense-zustand";
+import { v1 as uuidv1 } from "uuid";
 
 const ManageExpenses = ({ route, navigation }) => {
+  // --- Zustand Functions of Expense Store ---
+  const addExpense = useExpense((state) => state.addExpense);
+  const deleteExpense = useExpense((state) => state.deleteExpense);
+  const updateExpense = useExpense((state) => state.updateExpense);
+  const expenses = useExpense((state) => state.expenses);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(false);
   const expensesCtx = useContext(ExpensesContext);
@@ -19,7 +27,11 @@ const ManageExpenses = ({ route, navigation }) => {
   //the !! converts it into a boolean
   const isEditing = !!editedExpenseId;
 
-  const selectedExpense = expensesCtx.expenses.find(
+  // const selectedExpense = expensesCtx.expenses.find(
+  //   (expense) => expense.id === editedExpenseId
+  // );
+
+  const selectedExpense = expenses.find(
     (expense) => expense.id === editedExpenseId
   );
 
@@ -32,8 +44,9 @@ const ManageExpenses = ({ route, navigation }) => {
   async function deleteExpenseHandler() {
     setIsSubmitting(true);
     try {
-      await deleteExpense(editedExpenseId);
-      expensesCtx.deleteExpense(editedExpenseId);
+      //await deleteExpense(editedExpenseId);
+      //expensesCtx.deleteExpense(editedExpenseId);
+      deleteExpense(editedExpenseId);
       navigation.goBack();
     } catch (error) {
       setError("Could not delete expense - please try again later!");
@@ -49,11 +62,13 @@ const ManageExpenses = ({ route, navigation }) => {
     setIsSubmitting(true);
     try {
       if (isEditing) {
-        expensesCtx.updateExpense(editedExpenseId, expenseData);
-        await updateExpense(editedExpenseId, expenseData);
+        // expensesCtx.updateExpense(editedExpenseId, expenseData);
+        // await updateExpense(editedExpenseId, expenseData);
+        updateExpense(editedExpenseId, expenseData);
       } else {
-        const id = await storeExpense(expenseData);
-        expensesCtx.addExpense({ ...expenseData, id: id });
+        //const id = await storeExpense(expenseData);
+        //expensesCtx.addExpense({ ...expenseData, id: id });
+        addExpense({ ...expenseData, id: uuidv1() });
       }
       navigation.goBack();
     } catch (error) {

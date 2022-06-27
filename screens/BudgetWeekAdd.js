@@ -2,12 +2,17 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, FlatList, Alert } from "react-native";
 import IconButton from "../components/UI/IconButton";
 import { GlobalStyles } from "../constants/style";
-import budget from "../constants/budget";
+import Budget from "../constants/budget";
 import Input from "../components/ManageExpense/Input";
 import Button from "../components/UI/Button";
 import BudgetItem from "../components/CalendarBudget/BudgetItem";
+import { useBudget } from "../store/expense-zustand";
 
 function BudgetWeekAdd({ navigation, route }) {
+  // --- Zustand ---
+  const addBudget = useBudget((state) => state.addBudget);
+  const budget = useBudget((state) => state.budget);
+
   // --- Obtain object from the other page ---
   const obj = route.params;
   const validation = obj.addValidate;
@@ -98,7 +103,7 @@ function BudgetWeekAdd({ navigation, route }) {
           {
             text: "Submit",
             onPress: () => {
-              budget.push({
+              addBudget({
                 id: Math.random(),
                 initialDate: date_Modified_initial.toISOString().slice(0, 10),
                 lastDate: date_Modified_last.toISOString().slice(0, 10),
@@ -106,7 +111,6 @@ function BudgetWeekAdd({ navigation, route }) {
                 leftbudget: amount_Modified,
               });
               onCancel();
-              console.log(budget);
             },
           },
         ]

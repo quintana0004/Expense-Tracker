@@ -3,19 +3,58 @@ import { View, Text, StyleSheet, Image } from "react-native";
 import IconButton from "../components/UI/IconButton";
 import { GlobalStyles } from "../constants/style";
 import CircularProgress from "react-native-circular-progress-indicator";
-import { getFormattedDate } from "../util/date";
 import Budget from "../constants/budget";
-import { Feather } from "@expo/vector-icons";
+import ErrorOverlay from "../components/UI/ErrorOverlay";
+import LoadingOverlay from "../components/UI/LoadingOverlay";
+import { useBudget, useExpense } from "../store/expense-zustand";
+import { checkifWithinRangeDate, getFormattedDate } from "../util/date";
 
 function BudgetWeek({ navigation }) {
+  // --- Zustand Functions and Data ---
+  const setBudget = useBudget((state) => state.setBudget);
+  const updateBudgetBalance = useBudget((state) => state.updateBudgetBalance);
+  const expenses = useExpense((state) => state.expenses);
+  const budget = useBudget((state) => state.budget);
+
+  // --- Check for Validation of Load  ---
+  const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function getBudget() {
+      setIsFetching(true);
+      try {
+        // const expenses = await fetchExpenses();
+        // expensesCtx.setExpenses(expenses);
+        setBudget(Budget);
+      } catch (error) {
+        setError("Could not fetch the budget!");
+      }
+      setIsFetching(false);
+    }
+    getBudget();
+  }, [Budget]);
+
+  function errorHandler() {
+    setError(null);
+  }
+
+  if (error && !isFetching) {
+    return <ErrorOverlay message={error} onConfirm={errorHandler} />;
+  }
+
+  if (isFetching) {
+    return <LoadingOverlay />;
+  }
+
   // ---Activate the Add---
-  const [addActivate, setAddActivate] = useState(false);
+  const [activation, setActivation] = useState(false);
 
   // ---Initial Value Budget---
-  const [budgetValue, setBudgetValue] = useState();
+  const [recentBudgetValue, setRecentBudgetValue] = useState(0);
 
-  // ---Subtracted Initial Budget---
-  const [subBudget, setSubBudget] = useState();
+  // --- Balance Result ---
+  const [balance, setBalance] = useState(0);
 
   // --- Value of the left budget ---
   const [card, setCard] = useState(true);
@@ -23,7 +62,7 @@ function BudgetWeek({ navigation }) {
   // Navigate to other page
   function addInfoHandler() {
     return navigation.navigate("BudgetWeekAdd", {
-      addValidate: addActivate,
+      addValidate: activation,
     });
   }
 
@@ -32,7 +71,7 @@ function BudgetWeek({ navigation }) {
       headerRight: ({ tintColor }) => (
         <IconButton
           color={tintColor}
-          icon={addActivate ? "add-circle" : "time-sharp"}
+          icon={activation ? "add-circle" : "time-sharp"}
           size={24}
           onPress={addInfoHandler}
         />
@@ -40,16 +79,46 @@ function BudgetWeek({ navigation }) {
     });
   });
 
-  // --- Download the data and verify thge date ---
+  function totalSubtract(startDate, lastDate) {
+    let subtractTotal = 0;
+    for (const item of expenses) {
+      const date = getFormattedDate(item.date);
+      if (checkifWithinRangeDate(startDate, lastDate, date)) {
+        subtractTotal = subtractTotal + item.amount;
+      }
+    }
+    console.log("Recent Budget", recentBudgetValue);
+    console.log("Subtract Total", subtractTotal);
+    const balance = recentBudgetValue - subtractTotal;
+    setBalance(balance);
+    return balance;
+  }
+
+  // --- Verify the last data entered---
   useEffect(() => {
-    const len = Budget.length - 1;
-    setBudgetValue(Budget[len].initialBudget);
-    console.log("This is budget", budgetValue);
-    const sub = Budget[len].leftbudget;
-    const resta = sub - 100.0;
-    console.log(resta);
-    setSubBudget(resta);
-  }, [setBudgetValue, setSubBudget, Budget]);
+    if (budget.length != 0) {
+      const last = budget.length - 1;
+      setRecentBudgetValue(budget[last].initialBudget);
+      setBalance(budget[last].leftbudget);
+      const today = new Date();
+      const modToday = getFormattedDate(today);
+      const startDate = budget[last].initialDate;
+      const lastDate = budget[last].lastDate;
+
+      if (!checkifWithinRangeDate(startDate, lastDate, modToday)) {
+        setActivation(true);
+        setCard(true);
+      } else {
+        setActivation(false);
+        setCard(false);
+      }
+
+      if (!activation) {
+        const balanceNew = totalSubtract(startDate, lastDate);
+        updateBudgetBalance({ leftbudget: balanceNew }, last);
+      }
+    }
+  }, [expenses, updateBudgetBalance, budget.length, recentBudgetValue]);
 
   return (
     <View style={styles.container}>
@@ -58,8 +127,8 @@ function BudgetWeek({ navigation }) {
       </View>
       <View style={styles.circlePosition}>
         <CircularProgress
-          value={subBudget}
-          maxValue={budgetValue}
+          value={balance}
+          maxValue={recentBudgetValue}
           valuePrefix={"$"}
           radius={150}
           progressValueColor={GlobalStyles.colors.primary50}
@@ -76,9 +145,9 @@ function BudgetWeek({ navigation }) {
       </View>
       {card && (
         <View style={styles.square}>
-          <Text style={styles.txt}> Info Budget</Text>
+          <Text style={styles.txt}> Add New Budget Enabled </Text>
           <Text style={styles.p}>
-            This card will present, the budget that will be placed here.
+            Your budget for this week has expired please enter a new budget.
           </Text>
         </View>
       )}
