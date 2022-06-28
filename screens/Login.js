@@ -14,16 +14,27 @@ function Login({ navigation }) {
   setUser(user.email, user.password);
 
   // --- Verify the Email ---
-  const [verifyEmail, setVerifyEmail] = useState();
-  const [email, setEmail] = useState();
+  const [verifyEmail, setVerifyEmail] = useState(false);
+  const [email, setEmail] = useState("");
 
   // --- Verify the Password ---
-  const [verifyPassword, setVerifyPassword] = useState();
-  const [password, setPassword] = useState();
+  const [verifyPassword, setVerifyPassword] = useState(false);
+  const [password, setPassword] = useState("");
+
+  // --- Zustand Data ---
+  const emailUser = useUser((state) => state.email);
+  const passUser = useUser((state) => state.password);
 
   function enterAccount() {
-    // DO-SOMETHING
-    return navigation.navigate("RecentExpenses");
+    // --- Check entered data from user ---
+    if (emailUser === email && passUser === passUser) {
+      setVerifyEmail(false);
+      setVerifyPassword(false);
+      return navigation.navigate("RecentExpenses");
+    } else {
+      setVerifyEmail(true);
+      setVerifyPassword(true);
+    }
   }
 
   function signInPage() {
@@ -36,6 +47,7 @@ function Login({ navigation }) {
       <View style={styles.box1}>
         <Input
           label="Email"
+          invalid={verifyEmail}
           textInputConfig={{
             placeholder: "email@address.com",
             keyboardType: "email-address",
@@ -47,6 +59,7 @@ function Login({ navigation }) {
       <View style={styles.box2}>
         <Input
           label="Password"
+          invalid={verifyPassword}
           textInputConfig={{
             onChangeText: (password) => setPassword(password),
             value: password,

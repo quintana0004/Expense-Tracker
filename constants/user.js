@@ -1,3 +1,3 @@
-const user = { email: "test@gamil.com", password: "123456789" };
+const user = { email: "test@gmail.com", password: "123456789" };
 
 export default user;
