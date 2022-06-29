@@ -97,8 +97,11 @@ export const useBudget = create((set) => ({
 export const useUser = create((set) => ({
   email: "",
   password: "",
-  setUser: (email, passw) => set({ email: email, password: passw }),
-  addUser: (email, password) => set({ email: email, password: password }),
+  userId: "",
+  setUser: (email, passw, userid) =>
+    set({ email: email, password: passw, userId: userid }),
+  addUser: (email, password, userid) =>
+    set({ email: email, password: password, userId: userid }),
 }));
 
 // This object will how the information will be saved
