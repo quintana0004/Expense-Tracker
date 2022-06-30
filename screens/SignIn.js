@@ -1,4 +1,4 @@
-import react, { useState, useEffect } from "react";
+import react, { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -12,99 +12,137 @@ import {
 import { GlobalStyles } from "../constants/style";
 import Input from "../components/ManageExpense/Input";
 import Button from "../components/UI/Button";
-import { useUser } from "../store/expense-zustand";
-import { storeNewUser, checkIfExistingEmail } from "../util/http-two";
-import { CONSTANTS, JSHash } from "react-native-hash";
+import useCreateUser from "../hooks/useCreateUser";
 
 function SignIn({ navigation }) {
-  // --- Zustand Function ---
-  const addUser = useUser((state) => state.addUser);
-
-  // --- Verify the entered data from user
+  // --- Data ---
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [verifyConPass, setVerifyConPass] = useState(false);
   const [verifyEmail, setVerifyEmail] = useState(false);
   const [verifyPassword, setVerifyPassword] = useState(false);
-  const [validation, setValidation] = useState(false);
-  const [message, setMessage] = useState("");
 
-  function enterApplication() {
-    const modEmail = email.trim();
-    const modPass = password.trim();
-    const conPass = passwordConfirmation.trim();
+  // --- Custom Hook ---
+  const {
+    isValidEmail,
+    errorMessage,
+    setUserEmail,
+    setUserPassword,
+    setUserConfirmedPassword,
+    isCreatingUser,
+  } = useCreateUser();
 
-    let emailIsValid = modEmail.includes("@");
-    let passwordIsValid = modPass.length > 6;
-    let confirmedpass = conPass.length > 6;
+  useEffect(() => {
+    console.log("Is Creating User:", isCreatingUser);
+    console.log("Is Valid Email Taken:", isValidEmail);
+    console.log("Error Message:", errorMessage);
 
-    const emailExistAlready = async () => {
-      const emailValid = await checkIfExistingEmail(modEmail);
-      console.log(emailValid);
-      return emailValid;
-    };
-
-    console.log(emailExistAlready());
-    const valid = modPass !== conPass;
-
-    if (emailExistAlready()) {
-      emailIsValid = false;
-      setVerifyEmail(true);
-      setVerifyConPass(false);
-      setVerifyPassword(false);
-      Alert.alert(
-        "Sign Up Error",
-        `The email ${modEmail} is already taken. Please try using another email.`,
-        [{ text: "Okay", onPress: () => console.log("Okay Pressed") }]
-      );
-    }
-
-    if (modPass !== conPass) {
-      emailIsValid = true;
-      passwordIsValid = false;
-      confirmedpass = false;
-      setVerifyEmail(false);
-      setVerifyConPass(true);
-      setVerifyPassword(true);
-      Alert.alert("Sign Up Error", "Passwords must be the same.", [
-        { text: "Okay", onPress: () => console.log("Okay Pressed") },
-      ]);
-    }
-
-    if (emailExistAlready() && valid) {
-      emailIsValid = false;
-      passwordIsValid = false;
-      confirmedpass = false;
-      setVerifyEmail(true);
-      setVerifyConPass(true);
-      setVerifyPassword(true);
-      setValidation(true);
-      setMessage(
-        "The email is already taken and passwords don't match. Please try again."
-      );
-    }
-
-    if (emailIsValid && passwordIsValid && confirmedpass) {
-      try {
-        JSHash(modPass, CONSTANTS.HashAlgorithms.sha256).then(async (hash) => {
-          const userId = await storeNewUser(modEmail, hash);
-          addUser(modEmail, hash, userId);
-        });
-        setVerifyConPass(false);
-        setVerifyEmail(false);
-        setVerifyPassword(false);
+    if (!isCreatingUser) {
+      if (errorMessage === "" && isValidEmail.valid) {
         return navigation.navigate("RecentExpenses");
-      } catch (error) {
-        Alert.alert("Something went wrong, try again!", error.message, [
-          { text: "Okay", onPress: () => console.log("Okay Pressed") },
+      } else if (!isValidEmail.valid) {
+        setVerifyEmail(true);
+        Alert.alert("Something went wrong!", isValidEmail.message, [
+          {
+            text: "Okay",
+            onPress: () => {
+              console.log("Okay Pressed");
+            },
+          },
+        ]);
+      } else {
+        Alert.alert("Something went wrong!", errorMessage, [
+          {
+            text: "Okay",
+            onPress: () => {
+              console.log("Okay Pressed");
+            },
+          },
         ]);
       }
+    }
+  }, [isCreatingUser]);
+
+  function enterApplication() {
+    const modifiedEmail = email.trim();
+    const modifiedPassword = password.trim();
+    const confirmedPassword = passwordConfirmation.trim();
+
+    let emailIsValid = email.includes("@") && email.length !== 0;
+    let passwordIsValid = password.length >= 6 && password.length !== 0;
+    let confirmedpass =
+      confirmedPassword.length >= 6 && confirmedPassword.length !== 0;
+    let result = passwordIsValid && confirmedpass;
+    const valid = result && password === confirmedPassword;
+
+    setVerifyEmail(!emailIsValid);
+    setVerifyPassword(!passwordIsValid || !valid);
+    setVerifyConPass(!confirmedpass || !valid);
+
+    const isValidFields = validateFields(
+      emailIsValid,
+      passwordIsValid,
+      confirmedpass,
+      valid
+    );
+
+    if (!isValidFields.valid) {
+      Alert.alert("Something went wrong!", isValidFields.message, [
+        {
+          text: "Okay",
+          onPress: () => {
+            console.log("Okay Pressed");
+          },
+        },
+      ]);
+    } else {
+      setUserEmail(modifiedEmail);
+      setUserPassword(modifiedPassword);
+      setUserConfirmedPassword(confirmedPassword);
     }
   }
 
   function logInPage() {
     return navigation.navigate("Login");
+  }
+
+  function validateFields(emailIsValid, passwordIsValid, confirmedpass, valid) {
+    let validResponse = { valid: true, message: "" };
+
+    if (!emailIsValid && !passwordIsValid && !confirmedpass) {
+      validResponse = {
+        valid: false,
+        message:
+          "Verify that email is not taken, and for both passwords to be the same. Every input is requeried.",
+      };
+    } else if (!emailIsValid && !passwordIsValid) {
+      validResponse = {
+        valid: false,
+        message:
+          "Both email and password are invalid.\n Please provide a valid email address and a password with a length of 6 characters or more.",
+      };
+    } else if (!emailIsValid) {
+      validResponse = {
+        valid: false,
+        message: "The email entered is invalid, please try again.",
+      };
+    } else if (!passwordIsValid) {
+      validResponse = {
+        valid: false,
+        message: "Password is invalid, must have a length of 6 or more.",
+      };
+    } else if (!confirmedpass) {
+      validResponse = {
+        valid: false,
+        message:
+          "Confirmed Password is invalid, must have a length of 6 or more.",
+      };
+    } else if (!valid) {
+      validResponse = { valid: false, message: "The passwords don't match." };
+    }
+
+    return validResponse;
   }
 
   return (
@@ -146,11 +184,6 @@ function SignIn({ navigation }) {
               }}
             />
           </View>
-          {validation && (
-            <View style={{ margin: 5 }}>
-              <Text style={styles.text1}>{message}</Text>
-            </View>
-          )}
           <View style={styles.box4}>
             <Button onPress={enterApplication}>Create Account</Button>
           </View>

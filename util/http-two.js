@@ -7,7 +7,6 @@ export async function storeNewUser(email, password) {
     email: email,
     password: password,
   });
-
   const id = response.data.name;
   return id;
 }
@@ -16,13 +15,13 @@ export async function checkIfExistingEmail(email) {
   const response = await axios.get(BACKEND_URL + "/users.json");
 
   for (const key in response.data) {
-    console.log(response.data[key].email);
-    if (response.data[key].email === email) {
-      return true;
-    } else {
+    console.log("Emails: ", response.data[key].email);
+    if (response.data[key].email === email && email.length !== 0) {
       return false;
     }
   }
+
+  return true;
 }
 
 export async function fetchExistingUser(email, password) {
@@ -31,11 +30,17 @@ export async function fetchExistingUser(email, password) {
   for (const key in response.data) {
     if (
       response.data[key].email === email &&
-      passwordHash.verify(password, response.data[key].password)
+      response.data[key].password === password
     ) {
-      return response.data.key;
+      return {
+        userID: key,
+        email: response.data[key].email,
+        password: response.data[key].password,
+      };
     }
   }
+
+  return "No-key";
 }
 
 export async function fetchExpenses(userId) {}

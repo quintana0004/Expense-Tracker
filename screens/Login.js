@@ -1,17 +1,15 @@
 import react, { useState } from "react";
-import { StyleSheet, View, Text } from "react-native";
+import { StyleSheet, View, Text, Alert } from "react-native";
 import { GlobalStyles } from "../constants/style";
 import Input from "../components/ManageExpense/Input";
 import Button from "../components/UI/Button";
 import { useUser } from "../store/expense-zustand";
-import user from "../constants/user";
+import { fetchExistingUser } from "../util/http-two";
+import { CONSTANTS, JSHash } from "react-native-hash";
 
 function Login({ navigation }) {
   // --- Zustand Function ---
   const setUser = useUser((state) => state.setUser);
-
-  // --- Set the data ---
-  setUser(user.email, user.password);
 
   // --- Verify the Email ---
   const [verifyEmail, setVerifyEmail] = useState(false);
@@ -21,19 +19,43 @@ function Login({ navigation }) {
   const [verifyPassword, setVerifyPassword] = useState(false);
   const [password, setPassword] = useState("");
 
-  // --- Zustand Data ---
-  const emailUser = useUser((state) => state.email);
-  const passUser = useUser((state) => state.password);
-
   function enterAccount() {
-    // --- Check entered data from user ---
-    if (emailUser === email && passUser === passUser) {
-      setVerifyEmail(false);
-      setVerifyPassword(false);
-      return navigation.navigate("RecentExpenses");
-    } else {
-      setVerifyEmail(true);
+    const emailValid = email.trim().length !== 0;
+    const passwordValid = password.trim().length !== 0;
+
+    // --- Check password ---
+    if (!passwordValid) {
       setVerifyPassword(true);
+    }
+
+    // --- Check email ---
+    if (!emailValid) {
+      setVerifyEmail(true);
+    }
+
+    if (passwordValid && emailValid) {
+      try {
+        JSHash(password, CONSTANTS.HashAlgorithms.sha256).then(async (hash) => {
+          const user = await fetchExistingUser(email, hash);
+          if (user === "No-key") {
+            Alert.alert(
+              "This user is not found, please try again.",
+              "Check if email and password has been written correctly.",
+              [{ text: "Okay", onPress: () => console.log("Okay Pressed") }]
+            );
+          } else {
+            console.log(user.email);
+            console.log(user.password);
+            console.log(user.userID);
+            setUser(user.email, user.password, user.userID);
+            return navigation.navigate("RecentExpenses");
+          }
+        });
+      } catch (e) {
+        Alert.alert("Something went wrong, please try again.", e.message, [
+          { text: "Okay", onPress: () => console.log("Okay Pressed") },
+        ]);
+      }
     }
   }
 
