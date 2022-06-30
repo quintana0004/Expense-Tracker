@@ -1,15 +1,18 @@
-import react, { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, View, Text, Alert } from "react-native";
 import { GlobalStyles } from "../constants/style";
 import Input from "../components/ManageExpense/Input";
 import Button from "../components/UI/Button";
-import { useUser } from "../store/expense-zustand";
-import { fetchExistingUser } from "../util/http-two";
-import { CONSTANTS, JSHash } from "react-native-hash";
+import useCheckExistingUser from "../hooks/useCheckExistingUser";
 
 function Login({ navigation }) {
-  // --- Zustand Function ---
-  const setUser = useUser((state) => state.setUser);
+  const {
+    setEmailUser,
+    setPasswordUser,
+    isCheckedUser,
+    isValid,
+    errorMessage,
+  } = useCheckExistingUser();
 
   // --- Verify the Email ---
   const [verifyEmail, setVerifyEmail] = useState(false);
@@ -19,44 +22,82 @@ function Login({ navigation }) {
   const [verifyPassword, setVerifyPassword] = useState(false);
   const [password, setPassword] = useState("");
 
-  function enterAccount() {
-    const emailValid = email.trim().length !== 0;
-    const passwordValid = password.trim().length !== 0;
-
-    // --- Check password ---
-    if (!passwordValid) {
-      setVerifyPassword(true);
-    }
-
-    // --- Check email ---
-    if (!emailValid) {
-      setVerifyEmail(true);
-    }
-
-    if (passwordValid && emailValid) {
-      try {
-        JSHash(password, CONSTANTS.HashAlgorithms.sha256).then(async (hash) => {
-          const user = await fetchExistingUser(email, hash);
-          if (user === "No-key") {
-            Alert.alert(
-              "This user is not found, please try again.",
-              "Check if email and password has been written correctly.",
-              [{ text: "Okay", onPress: () => console.log("Okay Pressed") }]
-            );
-          } else {
-            console.log(user.email);
-            console.log(user.password);
-            console.log(user.userID);
-            setUser(user.email, user.password, user.userID);
-            return navigation.navigate("RecentExpenses");
-          }
-        });
-      } catch (e) {
-        Alert.alert("Something went wrong, please try again.", e.message, [
-          { text: "Okay", onPress: () => console.log("Okay Pressed") },
-        ]);
+  // --- Will re-render component ---
+  useEffect(() => {
+    if (!isCheckedUser) {
+      if (errorMessage === "" && isValid.valid) {
+        return navigation.navigate("RecentExpenses");
+      } else {
+        if (!isValid.valid) {
+          setVerifyEmail(true);
+          setVerifyPassword(true);
+          Alert.alert("Something went wrong!", isValid.message, [
+            { text: "Okay", onPress: () => console.log("Okay Pressed") },
+          ]);
+        } else {
+          Alert.alert("Something went wrong!", errorMessage, [
+            { text: "Okay", onPress: () => console.log("Okay Pressed") },
+          ]);
+        }
       }
     }
+  }, [isCheckedUser]);
+
+  function enterAccount() {
+    const modifiedEmail = email.trim();
+    const modifiedPassword = password.trim();
+
+    let emailIsValid =
+      modifiedEmail.includes("@") && modifiedEmail.length !== 0;
+    let passwordIsValid =
+      modifiedPassword.length >= 6 && modifiedPassword.length !== 0;
+
+    setVerifyEmail(!emailIsValid);
+    setVerifyPassword(!passwordIsValid);
+
+    const isValidFields = validateFields(emailIsValid, passwordIsValid);
+
+    if (!isValidFields.valid) {
+      Alert.alert("Something went wrong!", isValidFields.message, [
+        {
+          text: "Okay",
+          onPress: () => {
+            console.log("Okay Pressed");
+          },
+        },
+      ]);
+    } else {
+      setEmailUser(modifiedEmail);
+      setPasswordUser(modifiedPassword);
+    }
+  }
+
+  function validateFields(emailIsValid, passwordIsValid) {
+    let validResponse = { valid: true, message: "" };
+
+    if (!emailIsValid && !passwordIsValid) {
+      validResponse = {
+        valid: false,
+        message:
+          "Both email and password are invalid.\n Please provide a valid email address and a password with a length of 6 characters or more.",
+      };
+    } else {
+      if (!emailIsValid) {
+        validResponse = {
+          valid: false,
+          message: "The email entered is invalid, please try again.",
+        };
+      } else {
+        if (!passwordIsValid) {
+          validResponse = {
+            valid: false,
+            message: "Password is invalid, must have a length of 6 or more.",
+          };
+        }
+      }
+    }
+
+    return validResponse;
   }
 
   function signInPage() {

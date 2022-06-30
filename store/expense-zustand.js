@@ -103,12 +103,3 @@ export const useUser = create((set) => ({
   addUser: (email, password, userid) =>
     set({ email: email, password: password, userId: userid }),
 }));
-
-// This object will how the information will be saved
-// export const user = {
-//   email: useUser((state) => state.email),
-//   password: useUser((state) => state.password),
-//   expenses: useExpense((state) => state.expenses),
-//   calendar: useCalendar((state) => state.calendar),
-//   budget: useBudget((state) => state.budget),
-// };
