@@ -154,4 +154,43 @@ export function deleteCalendarExpense(userId, calendarId) {
   );
 }
 
-export async function fetchBudget(userId) {}
+// --- Budget Functions ---
+export async function fetchBudgetExpenses(userId) {
+  const response = await axios.get(
+    BACKEND_URL + `/users/${userId}/budget.json`
+  );
+
+  const budgets = [];
+
+  for (const key in response.data) {
+    const budgetObj = {
+      id: key,
+      initialDate: response.data[key].initialDate,
+      lastDate: response.data[key].lastDate,
+      initialBudget: response.data[key].initialBudget,
+      leftbudget: response.data[key].leftbudget,
+    };
+
+    budgets.push(budgetObj);
+  }
+
+  console.log(budgets);
+
+  return budgets;
+}
+
+export async function addBudgetExpenses(userId, budgetData) {
+  const response = await axios.post(
+    BACKEND_URL + `/users/${userId}/budget.json`,
+    budgetData
+  );
+
+  return response.data.name;
+}
+
+export function updateBudgetExpenses(userId, budgetId, budgetData) {
+  return axios.put(
+    BACKEND_URL + `/users/${userId}/budget/${budgetId}.json`,
+    budgetData
+  );
+}

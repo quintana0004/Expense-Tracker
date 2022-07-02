@@ -26,6 +26,10 @@ function Login({ navigation }) {
   useEffect(() => {
     if (!isCheckedUser) {
       if (errorMessage === "" && isValid.valid) {
+        setEmailUser("");
+        setPasswordUser("");
+        setEmail("");
+        setPassword("");
         return navigation.navigate("ExpensesOverview");
       } else {
         if (!isValid.valid) {

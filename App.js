@@ -2,6 +2,12 @@ import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import {
+  useUser,
+  useExpense,
+  useCalendar,
+  useBudget,
+} from "./store/expense-zustand";
 //Screens
 import ManageExpenses from "./screens/ManageExpenses";
 import RecentExpenses from "./screens/RecentExpenses";
@@ -24,6 +30,10 @@ const Stack = createNativeStackNavigator();
 const BottomTab = createBottomTabNavigator();
 
 function ExpensesOverview() {
+  const resetUser = useUser((state) => state.resetUser);
+  const resetExpense = useExpense((state) => state.resetExpense);
+  const resetCalendar = useCalendar((state) => state.resetCalendar);
+  const resetBudget = useBudget((state) => state.resetBudget);
   return (
     <BottomTab.Navigator
       screenOptions={({ navigation }) => ({
@@ -60,6 +70,10 @@ function ExpensesOverview() {
             size={24}
             color={tintColor}
             onPress={() => {
+              resetUser();
+              resetBudget();
+              resetCalendar();
+              resetExpense();
               navigation.navigate("Login");
             }}
           />

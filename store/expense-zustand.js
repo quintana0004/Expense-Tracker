@@ -28,6 +28,7 @@ export const useExpense = create((set) => ({
         draft.expenses = updatedExpenses;
       })
     ),
+  resetExpense: () => set({ expenses: [] }),
 }));
 
 // useCalendar store will be the one to manage the calendar days
@@ -72,6 +73,7 @@ export const useCalendar = create((set) => ({
         });
       })
     ),
+  resetCalendar: () => set({ calendar: {} }),
 }));
 
 // useBudget mamages the budget of the user
@@ -94,6 +96,7 @@ export const useBudget = create((set) => ({
         draft.budget = updatedBudget;
       })
     ),
+  resetBudget: () => set({ budget: [] }),
 }));
 
 // useUser manages the new users that enters
@@ -105,4 +108,5 @@ export const useUser = create((set) => ({
     set({ email: email, password: passw, userId: userid }),
   addUser: (email, password, userid) =>
     set({ email: email, password: password, userId: userid }),
+  resetUser: () => set({ email: "", password: "", userId: "" }),
 }));

@@ -2,16 +2,19 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, FlatList, Alert } from "react-native";
 import IconButton from "../components/UI/IconButton";
 import { GlobalStyles } from "../constants/style";
-import Budget from "../constants/budget";
 import Input from "../components/ManageExpense/Input";
 import Button from "../components/UI/Button";
 import BudgetItem from "../components/CalendarBudget/BudgetItem";
-import { useBudget } from "../store/expense-zustand";
+import { useBudget, useUser } from "../store/expense-zustand";
+import { addBudgetExpenses } from "../util/http-two";
+import ErrorOverlay from "../components/UI/ErrorOverlay";
+import LoadingOverlay from "../components/UI/LoadingOverlay";
 
 function BudgetWeekAdd({ navigation, route }) {
   // --- Zustand ---
   const addBudget = useBudget((state) => state.addBudget);
   const budget = useBudget((state) => state.budget);
+  const userId = useUser((state) => state.userId);
 
   // --- Obtain object from the other page ---
   const obj = route.params;
@@ -22,43 +25,43 @@ function BudgetWeekAdd({ navigation, route }) {
     return navigation.goBack();
   }
 
-  //Values needed to enter in the database
-  // Initial Date
+  // --- Values needed to enter in the database ---
+  // --- Initial Date ---
   const [initialDay, setInitialDay] = useState("");
   const [initialMonth, setInitialMonth] = useState("");
   const [initialYear, setInitialYear] = useState("");
 
-  //Last Date
+  // --- Last Date ---
   const [lastDay, setLastDay] = useState("");
   const [lastMonth, setLastMonth] = useState("");
   const [lastYear, setLastYear] = useState("");
 
-  //Amount
+  // --- Amount ---
   const [amount, setAmount] = useState();
 
-  //Verify if form is valid
-  // Initial Date
+  // --- Verify if form is valid ---
+  //--- Initial Date ---
   const [initialDayValid, setInitialDayValid] = useState(false);
   const [initialMonthValid, setInitialMonthValid] = useState(false);
   const [initialYearValid, setInitialYearValid] = useState(false);
 
-  //Last Date
+  // --- Last Date ---
   const [lastDayValid, setLastDayValid] = useState(false);
   const [lastMonthValid, setLastMonthValid] = useState(false);
   const [lastYearValid, setLastYearValid] = useState(false);
 
-  //Amount
+  // --- Amount ---
   const [amountValid, setAmountValid] = useState(false);
   const [formValid, setFormValid] = useState(false);
-  // --- Verify the Input values ---
-  function inputVerification() {
-    // I. Set all data needed to be later be passed on the "budget"
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(false);
+
+  async function inputVerification() {
+    // I. Set all data needed to be later be passed on the "budget"
     // Date Modification
-    let day_initial = +initialDay;
-    let day_last = +lastDay;
-    let initialDate = `${initialYear}-${initialMonth}-${day_initial.toString()}`;
-    let lastDate = `${lastYear}-${lastMonth}-${day_last.toString()}`;
+    let initialDate = `${initialYear}-${initialMonth}-${initialDay}`;
+    let lastDate = `${lastYear}-${lastMonth}-${lastDay}`;
     const date_Modified_initial = new Date(initialDate);
     const date_Modified_last = new Date(lastDate);
 
@@ -75,6 +78,14 @@ function BudgetWeekAdd({ navigation, route }) {
     setLastYearValid(!(lastYear.length > 0));
     setAmountValid(!(!isNaN(amount_Modified) && amount_Modified > 0));
 
+    console.log("InitialDay:", initialDayValid);
+    console.log("InitialMonth:", initialMonthValid);
+    console.log("InitialYear:", initialYearValid);
+    console.log("LastDay:", lastDayValid);
+    console.log("LastMonth:", lastMonthValid);
+    console.log("LastYear:", lastYearValid);
+    console.log("AmountValid: ", amountValid);
+
     if (
       initialDayValid ||
       initialMonthValid ||
@@ -86,6 +97,9 @@ function BudgetWeekAdd({ navigation, route }) {
     ) {
       return setFormValid(true);
     }
+
+    console.log("Initial Date:", date_Modified_initial.toString());
+    console.log("Last Date: ", date_Modified_last.toString());
 
     if (
       !(date_Modified_initial.toString() !== "Invalid Date") ||
@@ -99,23 +113,51 @@ function BudgetWeekAdd({ navigation, route }) {
         "Submit Expected Budget",
         "Once this budget has been submitted it can't be edited or erased from submission.",
         [
-          { text: "Cancel", style: "cancel", onPress: () => setSubmit(false) },
+          {
+            text: "Cancel",
+            style: "cancel",
+            onPress: () => console.log("Pressed Cancel"),
+          },
           {
             text: "Submit",
             onPress: () => {
-              addBudget({
-                id: Math.random(),
-                initialDate: date_Modified_initial.toISOString().slice(0, 10),
-                lastDate: date_Modified_last.toISOString().slice(0, 10),
-                initialBudget: amount_Modified,
-                leftbudget: amount_Modified,
-              });
+              setIsSubmitting(true);
+              try {
+                const id = addBudgetExpenses(userId, {
+                  initialDate: date_Modified_initial.toISOString().slice(0, 10),
+                  lastDate: date_Modified_last.toISOString().slice(0, 10),
+                  initialBudget: amount_Modified,
+                  leftbudget: amount_Modified,
+                });
+                addBudget({
+                  initialDate: date_Modified_initial.toISOString().slice(0, 10),
+                  lastDate: date_Modified_last.toISOString().slice(0, 10),
+                  initialBudget: amount_Modified,
+                  leftbudget: amount_Modified,
+                  id: id,
+                });
+              } catch (error) {
+                setError("Could not save data - please try again later");
+                setIsSubmitting(false);
+              }
               onCancel();
             },
           },
         ]
       );
     }
+  }
+
+  function errorHandler() {
+    setError(null);
+  }
+
+  if (error && !isSubmitting) {
+    return <ErrorOverlay message={error} onConfirm={errorHandler} />;
+  }
+
+  if (isSubmitting) {
+    return <LoadingOverlay />;
   }
 
   if (validation) {

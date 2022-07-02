@@ -12,13 +12,12 @@ function RecentExpenses() {
   const expenses = useExpense((state) => state.expenses);
   const userId = useUser((state) => state.userId);
 
-  const [isFetching, setIsFetching] = useState();
+  const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState();
   // const expensesCtx = useContext(ExpensesContext);
 
   useEffect(() => {
     async function getExpenses() {
-      setIsFetching(true);
       try {
         // const expenses = await fetchExpenses();
         // expensesCtx.setExpenses(expenses);
@@ -30,10 +29,8 @@ function RecentExpenses() {
       }
       setIsFetching(false);
     }
-    if (expenses.length === 0) {
-      getExpenses();
-    }
-  }, [expenses]);
+    getExpenses();
+  }, []);
 
   function errorHandler() {
     setError(null);

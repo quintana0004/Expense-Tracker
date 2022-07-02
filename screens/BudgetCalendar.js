@@ -36,7 +36,6 @@ function BudgetCalendar({ navigation }) {
 
   useEffect(() => {
     async function getCalendar() {
-      setIsFetching(true);
       try {
         const calendarBudget = await fetchCalendar(userId);
         setCalendar(calendarBudget);
@@ -48,10 +47,8 @@ function BudgetCalendar({ navigation }) {
       setIsFetching(false);
     }
 
-    if (Object.keys(calendar).length === 0) {
-      getCalendar();
-    }
-  }, [calendar]);
+    getCalendar();
+  }, []);
 
   function errorHandler() {
     setError(null);

@@ -1,13 +1,13 @@
 import React, { useLayoutEffect, useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import IconButton from "../components/UI/IconButton";
 import { GlobalStyles } from "../constants/style";
 import CircularProgress from "react-native-circular-progress-indicator";
-import Budget from "../constants/budget";
 import ErrorOverlay from "../components/UI/ErrorOverlay";
 import LoadingOverlay from "../components/UI/LoadingOverlay";
-import { useBudget, useExpense } from "../store/expense-zustand";
+import { useBudget, useExpense, useUser } from "../store/expense-zustand";
 import { checkifWithinRangeDate, getFormattedDate } from "../util/date";
+import { fetchBudgetExpenses, updateBudgetExpenses } from "../util/http-two";
 
 function BudgetWeek({ navigation }) {
   // --- Zustand Functions and Data ---
@@ -15,58 +15,22 @@ function BudgetWeek({ navigation }) {
   const updateBudgetBalance = useBudget((state) => state.updateBudgetBalance);
   const expenses = useExpense((state) => state.expenses);
   const budget = useBudget((state) => state.budget);
-
-  // --- Check for Validation of Load  ---
-  const [isFetching, setIsFetching] = useState(false);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    async function getBudget() {
-      setIsFetching(true);
-      try {
-        // const expenses = await fetchExpenses();
-        // expensesCtx.setExpenses(expenses);
-        setBudget(Budget);
-      } catch (error) {
-        setError("Could not fetch the budget!");
-      }
-      setIsFetching(false);
-    }
-    getBudget();
-  }, [Budget]);
-
-  function errorHandler() {
-    setError(null);
-  }
-
-  if (error && !isFetching) {
-    return <ErrorOverlay message={error} onConfirm={errorHandler} />;
-  }
-
-  if (isFetching) {
-    return <LoadingOverlay />;
-  }
+  const userId = useUser((state) => state.userId);
 
   // ---Activate the Add---
-  const [activation, setActivation] = useState(false);
-
+  const [activation, setActivation] = useState(true);
   // ---Initial Value Budget---
   const [recentBudgetValue, setRecentBudgetValue] = useState(0);
-
   // --- Balance Result ---
   const [balance, setBalance] = useState(0);
-
   // --- Value of the left budget ---
   const [card, setCard] = useState(true);
-
-  // Navigate to other page
-  function addInfoHandler() {
-    return navigation.navigate("BudgetWeekAdd", {
-      addValidate: activation,
-    });
-  }
+  // --- Check for Validation of Load  ---
+  const [isFetching, setIsFetching] = useState(true);
+  const [error, setError] = useState("");
 
   useLayoutEffect(() => {
+    console.log("--- USE LAYAOUT RUNNING ---");
     navigation.setOptions({
       headerRight: ({ tintColor }) => (
         <IconButton
@@ -77,26 +41,31 @@ function BudgetWeek({ navigation }) {
         />
       ),
     });
-  });
+  }, [activation]);
 
-  function totalSubtract(startDate, lastDate) {
-    let subtractTotal = 0;
-    for (const item of expenses) {
-      const date = getFormattedDate(item.date);
-      if (checkifWithinRangeDate(startDate, lastDate, date)) {
-        subtractTotal = subtractTotal + item.amount;
+  useEffect(() => {
+    console.log("--- USE EFFECT ONE RUNNING ---");
+    async function getBudget() {
+      try {
+        const budgetResult = await fetchBudgetExpenses(userId);
+        console.log("BUDGET RESULT: ", budgetResult);
+        setBudget(budgetResult);
+      } catch (error) {
+        setError("Could not fetch the budget!");
       }
+      setIsFetching(false);
     }
-    console.log("Recent Budget", recentBudgetValue);
-    console.log("Subtract Total", subtractTotal);
-    const balance = recentBudgetValue - subtractTotal;
-    setBalance(balance);
-    return balance;
-  }
+    getBudget();
+  }, []);
 
   // --- Verify the last data entered---
   useEffect(() => {
-    if (budget.length != 0) {
+    console.log("--- USE EFFECT two RUNNING ---");
+    console.log("Before calculation");
+    console.log("IS FETCHING: ", isFetching);
+    console.log("BUDGET LENGTH: ", budget.length);
+    if (budget.length != 0 && !isFetching) {
+      console.log("Entered calculation");
       const last = budget.length - 1;
       setRecentBudgetValue(budget[last].initialBudget);
       setBalance(budget[last].leftbudget);
@@ -115,10 +84,60 @@ function BudgetWeek({ navigation }) {
 
       if (!activation) {
         const balanceNew = totalSubtract(startDate, lastDate);
+        setBalance(balanceNew);
+        updateBalance(userId, budget[last].id, {
+          ...budget[last],
+          leftbudget: balanceNew,
+        });
         updateBudgetBalance({ leftbudget: balanceNew }, last);
       }
     }
-  }, [expenses, updateBudgetBalance, budget.length, recentBudgetValue]);
+  }, [isFetching, expenses]);
+
+  async function updateBalance(userId, budgetId, budgetData) {
+    await updateBudgetExpenses(userId, budgetId, budgetData);
+  }
+
+  function errorHandler() {
+    setError(null);
+  }
+
+  if (error && !isFetching) {
+    return <ErrorOverlay message={error} onConfirm={errorHandler} />;
+  }
+
+  if (isFetching) {
+    return <LoadingOverlay />;
+  }
+
+  // Navigate to other page
+  function addInfoHandler() {
+    return navigation.navigate("BudgetWeekAdd", {
+      addValidate: activation,
+    });
+  }
+
+  function totalSubtract(startDate, lastDate) {
+    let subtractTotal = 0;
+    for (const item of expenses) {
+      const date = getFormattedDate(item.date);
+      if (checkifWithinRangeDate(startDate, lastDate, date)) {
+        subtractTotal = subtractTotal + item.amount;
+      }
+    }
+    console.log("Recent Budget", recentBudgetValue);
+    console.log("Subtract Total", subtractTotal);
+    const balance = recentBudgetValue - subtractTotal;
+    return balance;
+  }
+
+  // if (budget.length === 0) {
+  //   return (
+  //     <Text style={styles.title2}>
+  //       There is no budget placed yet, please enter new budget!
+  //     </Text>
+  //   );
+  // }
 
   return (
     <View style={styles.container}>
@@ -202,6 +221,12 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     marginLeft: 7,
     marginRight: 7,
+  },
+  title2: {
+    textAlign: "center",
+    fontSize: 15,
+    fontWeight: "bold",
+    color: GlobalStyles.colors.primary50,
   },
 });
 

@@ -37,7 +37,7 @@ function useCheckExistingUser() {
             message: "",
           });
           setUser(user.email, user.password, user.userID);
-          console.log("User ID:", user.userID);
+          console.log("----User ID:----", user.userID);
         }
       } catch (error) {
         setErrorMessage(error.message);
