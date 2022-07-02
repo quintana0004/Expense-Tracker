@@ -126,6 +126,7 @@ export default function App() {
       <ExpensesContextProvider>
         <NavigationContainer>
           <Stack.Navigator
+            initialRouteName="Login"
             screenOptions={{
               headerStyle: { backgroundColor: GlobalStyles.colors.primary500 },
               headerTintColor: "white",

@@ -1,6 +1,7 @@
 import { format, isWithinInterval } from "date-fns";
 
 export function getFormattedDate(date) {
+  console.log("Date of item: ", date);
   return date.toISOString().slice(0, 10);
 }
 

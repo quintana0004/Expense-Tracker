@@ -4,11 +4,15 @@ import { GlobalStyles } from "../constants/style";
 import Input from "../components/ManageExpense/Input";
 import Item from "../constants/calendar";
 import Button from "../components/UI/Button";
-import { useCalendar } from "../store/expense-zustand";
+import { useCalendar, useUser } from "../store/expense-zustand";
+import LoadingOverlay from "../components/UI/LoadingOverlay";
+import ErrorOverlay from "../components/UI/ErrorOverlay";
+import { addCalendarExpense } from "../util/http-two";
 
 function ManageAddBudgetCalendar({ navigation }) {
   // --- Zustand Function ---
   const addCalendar = useCalendar((state) => state.addCalendar);
+  const userId = useUser((state) => state.userId);
 
   // Date input and validation
   const [date, setDate] = useState("");
@@ -26,8 +30,11 @@ function ManageAddBudgetCalendar({ navigation }) {
   // Presents the hidden message
   const [formValid, setFormValid] = useState(false);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(false);
+
   // The submit values to dummy data
-  function dateVerificationHandler() {
+  async function dateVerificationHandler() {
     // I. Set all data needed to be later be passed on the "Item"
     const date_Modified = new Date(date);
     const amount_Modified = +amount;
@@ -43,8 +50,28 @@ function ManageAddBudgetCalendar({ navigation }) {
 
     setDate(date_Modified.toISOString().slice(0, 10));
 
-    // III. Send that data to the dummy data
-    addCalendar(title, +amount, date);
+    // III. Send data to backend
+    setIsSubmitting(true);
+    try {
+      const id = await addCalendarExpense(userId, title, +amount, date);
+      addCalendar(title, +amount, date, id);
+    } catch (error) {
+      setError("Could not save data - please try again later!");
+      setIsSubmitting(false);
+    }
+    setIsSubmitting(false);
+  }
+
+  function errorHandler() {
+    setError(null);
+  }
+
+  if (error && !isSubmitting) {
+    return <ErrorOverlay message={error} onConfirm={errorHandler} />;
+  }
+
+  if (isSubmitting) {
+    return <LoadingOverlay />;
   }
 
   function onCancel() {

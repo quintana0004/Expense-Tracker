@@ -1,16 +1,19 @@
 import react, { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Item from "../constants/calendar";
 import Input from "../components/ManageExpense/Input";
 import Button from "../components/UI/Button";
 import { GlobalStyles } from "../constants/style";
-import { useCalendar } from "../store/expense-zustand";
+import { useCalendar, useUser } from "../store/expense-zustand";
 import { getStringFormatDate } from "../util/date";
+import LoadingOverlay from "../components/UI/LoadingOverlay";
+import ErrorOverlay from "../components/UI/ErrorOverlay";
+import { updateCalendarExpense, deleteCalendarExpense } from "../util/http-two";
 
 function ManageOtherBudgetCalendar({ route, navigation }) {
   // --- Zustand Functions ---
   const deleteCalendar = useCalendar((state) => state.deleteCalendar);
   const updateCalendar = useCalendar((state) => state.updateCalendar);
+  const userId = useUser((state) => state.userId);
 
   // --- Zustand Data ---
   const calendar = useCalendar((state) => state.calendar);
@@ -20,14 +23,10 @@ function ManageOtherBudgetCalendar({ route, navigation }) {
   const amountProvided = obj.amountKey;
   const dateProvided = obj.dateKey;
   const titleProvided = obj.titleKey;
+  const idProvided = obj.idProvided;
 
   // --- Date changed with string format ---
   const dateString = getStringFormatDate(dateProvided);
-
-  // Validate the change made
-  // Date input and validation
-  // const [date, setDate] = useState(dateProvided);
-  // const [dateValidation, setDateValidation] = useState(false);
 
   // Amount input and validation
   const [amount, setAmount] = useState(amountProvided.toString());
@@ -41,13 +40,16 @@ function ManageOtherBudgetCalendar({ route, navigation }) {
   // Presents the hidden message
   const [formValid, setFormValid] = useState(false);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(false);
+
   // ---Cancel Button---
   function onCancel() {
     navigation.goBack();
   }
 
   // ---Verify and Update Button---
-  function onVerifyUpdate() {
+  async function onVerifyUpdate() {
     //I. Set all the needed to be later be passed on the Item
     const amount_Modified = +amount;
 
@@ -62,22 +64,34 @@ function ManageOtherBudgetCalendar({ route, navigation }) {
 
     //setDate(date_Modified.toISOString().slice(0, 10));
     // III. Send that data to the dummy data
-    if (calendar.hasOwnProperty(dateProvided)) {
-      const len = calendar[dateProvided].length;
-      for (let i = 0; i < len; i++) {
-        if (
-          calendar[dateProvided][i].title === titleProvided &&
-          calendar[dateProvided][i].amount === amountProvided
-        ) {
-          updateCalendar(title, amount_Modified, dateProvided, i);
-          navigation.goBack();
+    setIsSubmitting(true);
+    try {
+      if (calendar.hasOwnProperty(dateProvided)) {
+        const len = calendar[dateProvided].length;
+        for (let i = 0; i < len; i++) {
+          if (
+            calendar[dateProvided][i].title === titleProvided &&
+            calendar[dateProvided][i].amount === amountProvided
+          ) {
+            await updateCalendarExpense(userId, idProvided, {
+              title: title,
+              amount: amount_Modified,
+              date: dateProvided,
+            });
+            updateCalendar(title, amount_Modified, dateProvided, i, idProvided);
+            navigation.goBack();
+          }
         }
       }
+    } catch (error) {
+      setError("Could not update data - please try again later!");
+      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   }
 
   // ---Verify and Delete Button---
-  function onVerifyDelete() {
+  async function onVerifyDelete() {
     //I. Set all the needed to be later be passed on the Item
     const amount_Modified = +amount;
 
@@ -92,18 +106,38 @@ function ManageOtherBudgetCalendar({ route, navigation }) {
 
     // setDate(date_Modified.toISOString().slice(0, 10));
     // III. Send that data to the dummy data
-    if (calendar.hasOwnProperty(dateProvided)) {
-      const len = calendar[dateProvided].length;
-      for (let i = 0; i < len; i++) {
-        if (
-          calendar[dateProvided][i].title === titleProvided &&
-          calendar[dateProvided][i].amount === amountProvided
-        ) {
-          deleteCalendar(i, dateProvided);
-          navigation.goBack();
+    setIsSubmitting(true);
+    try {
+      if (calendar.hasOwnProperty(dateProvided)) {
+        const len = calendar[dateProvided].length;
+        for (let i = 0; i < len; i++) {
+          if (
+            calendar[dateProvided][i].title === titleProvided &&
+            calendar[dateProvided][i].amount === amountProvided
+          ) {
+            await deleteCalendarExpense(userId, idProvided);
+            deleteCalendar(i, dateProvided);
+            navigation.goBack();
+          }
         }
       }
+    } catch (error) {
+      setError("Could not delete data - please try again later!");
+      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
+  }
+
+  function errorHandler() {
+    setError(null);
+  }
+
+  if (error && !isSubmitting) {
+    return <ErrorOverlay message={error} onConfirm={errorHandler} />;
+  }
+
+  if (isSubmitting) {
+    return <LoadingOverlay />;
   }
 
   return (

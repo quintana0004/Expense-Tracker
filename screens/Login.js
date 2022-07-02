@@ -26,7 +26,7 @@ function Login({ navigation }) {
   useEffect(() => {
     if (!isCheckedUser) {
       if (errorMessage === "" && isValid.valid) {
-        return navigation.navigate("RecentExpenses");
+        return navigation.navigate("ExpensesOverview");
       } else {
         if (!isValid.valid) {
           setVerifyEmail(true);

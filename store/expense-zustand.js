@@ -33,7 +33,7 @@ export const useExpense = create((set) => ({
 // useCalendar store will be the one to manage the calendar days
 export const useCalendar = create((set) => ({
   calendar: {},
-  addCalendar: (title, amount, date) =>
+  addCalendar: (title, amount, date, id) =>
     set(
       produce((draft) => {
         if (!draft.calendar.hasOwnProperty(date)) {
@@ -42,12 +42,14 @@ export const useCalendar = create((set) => ({
             title: title,
             amount: amount,
             date: date,
+            id: id,
           });
         } else {
           draft.calendar[date].push({
             title: title,
             amount: amount,
             date: date,
+            id: id,
           });
         }
       })
@@ -59,13 +61,14 @@ export const useCalendar = create((set) => ({
         draft.calendar[date].splice(index, 1);
       })
     ),
-  updateCalendar: (title, amount, date, index) =>
+  updateCalendar: (title, amount, date, index, id) =>
     set(
       produce((draft) => {
         draft.calendar[date].splice(index, 1, {
           title: title,
           amount: amount,
           date: date,
+          id: id,
         });
       })
     ),

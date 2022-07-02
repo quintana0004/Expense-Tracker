@@ -1,16 +1,13 @@
-import React, { useLayoutEffect, useContext, useState } from "react";
-import { View, StyleSheet, TextInput } from "react-native";
+import React, { useLayoutEffect, useState } from "react";
+import { View, StyleSheet } from "react-native";
 import IconButton from "../components/UI/IconButton";
 import { GlobalStyles } from "../constants/style";
-//import { useRoute, useNavigation } from "@react-navigation/native";
-import Button from "../components/UI/Button";
 import { ExpensesContext } from "../store/expense-context";
 import ExpenseForm from "../components/ManageExpense/ExpenseForm";
-import { storeExpense, updateExpense, deleteExpense } from "../util/http";
 import LoadingOverlay from "../components/UI/LoadingOverlay";
 import ErrorOverlay from "../components/UI/ErrorOverlay";
-import { useExpense } from "../store/expense-zustand";
-import { v1 as uuidv1 } from "uuid";
+import { useExpense, useUser } from "../store/expense-zustand";
+import { addExpenses, deleteExpenses, updateExpenses } from "../util/http-two";
 
 const ManageExpenses = ({ route, navigation }) => {
   // --- Zustand Functions of Expense Store ---
@@ -18,10 +15,10 @@ const ManageExpenses = ({ route, navigation }) => {
   const deleteExpense = useExpense((state) => state.deleteExpense);
   const updateExpense = useExpense((state) => state.updateExpense);
   const expenses = useExpense((state) => state.expenses);
+  const userId = useUser((state) => state.userId);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(false);
-  const expensesCtx = useContext(ExpensesContext);
 
   const editedExpenseId = route.params?.expenseId;
   //the !! converts it into a boolean
@@ -46,6 +43,7 @@ const ManageExpenses = ({ route, navigation }) => {
     try {
       //await deleteExpense(editedExpenseId);
       //expensesCtx.deleteExpense(editedExpenseId);
+      await deleteExpenses(userId, editedExpenseId);
       deleteExpense(editedExpenseId);
       navigation.goBack();
     } catch (error) {
@@ -65,10 +63,13 @@ const ManageExpenses = ({ route, navigation }) => {
         // expensesCtx.updateExpense(editedExpenseId, expenseData);
         // await updateExpense(editedExpenseId, expenseData);
         updateExpense(editedExpenseId, expenseData);
+        await updateExpenses(userId, editedExpenseId, expenseData);
       } else {
         //const id = await storeExpense(expenseData);
         //expensesCtx.addExpense({ ...expenseData, id: id });
-        addExpense({ ...expenseData, id: uuidv1() });
+        const id = await addExpenses(userId, expenseData);
+        console.log("Expected ID:", id);
+        addExpense({ ...expenseData, id: id });
       }
       navigation.goBack();
     } catch (error) {

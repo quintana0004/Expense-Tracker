@@ -40,7 +40,7 @@ function SignIn({ navigation }) {
 
     if (!isCreatingUser) {
       if (errorMessage === "" && isValidEmail.valid) {
-        return navigation.navigate("RecentExpenses");
+        return navigation.navigate("ExpensesOverview");
       } else if (!isValidEmail.valid) {
         setVerifyEmail(true);
         Alert.alert("Something went wrong!", isValidEmail.message, [

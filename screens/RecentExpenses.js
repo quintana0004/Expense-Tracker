@@ -1,18 +1,16 @@
-import React, { useContext, useEffect, useState } from "react";
-import { StyleSheet } from "react-native";
-import { ExpensesContext } from "../store/expense-context";
+import React, { useEffect, useState } from "react";
 import ExpensesOutput from "../components/ExpensesOutput/ExpensesOutput";
 import { getDateMinusDays } from "../util/date";
-import { fetchExpenses } from "../util/http";
 import LoadingOverlay from "../components/UI/LoadingOverlay";
 import ErrorOverlay from "../components/UI/ErrorOverlay";
-import expense from "../constants/expenses";
-import { useExpense } from "../store/expense-zustand";
+import { useExpense, useUser } from "../store/expense-zustand";
+import { fetchExpenses } from "../util/http-two";
 
 function RecentExpenses() {
   //--- Zustand Functions ---
   const setExpense = useExpense((state) => state.setExpense);
   const expenses = useExpense((state) => state.expenses);
+  const userId = useUser((state) => state.userId);
 
   const [isFetching, setIsFetching] = useState();
   const [error, setError] = useState();
@@ -24,16 +22,18 @@ function RecentExpenses() {
       try {
         // const expenses = await fetchExpenses();
         // expensesCtx.setExpenses(expenses);
-
-        setExpense(expense);
+        const expenseResult = await fetchExpenses(userId);
+        console.log("My Expenses:", expenseResult);
+        setExpense(expenseResult);
       } catch (error) {
         setError("Could not fetch expenses!");
       }
-
       setIsFetching(false);
     }
-    getExpenses();
-  }, [setExpense]);
+    if (expenses.length === 0) {
+      getExpenses();
+    }
+  }, [expenses]);
 
   function errorHandler() {
     setError(null);

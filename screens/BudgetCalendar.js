@@ -1,13 +1,13 @@
 import React, { useLayoutEffect, useEffect, useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView } from "react-native";
+import { StyleSheet, SafeAreaView, Text } from "react-native";
 import { GlobalStyles } from "../constants/style";
-import { Calendar, CalendarList, Agenda } from "react-native-calendars";
-import item from "../constants/calendar";
+import { Agenda } from "react-native-calendars";
 import BudgetCalendarItem from "../components/CalendarBudget/BudgetCalendarItem";
 import IconButton from "../components/UI/IconButton";
-import { useCalendar } from "../store/expense-zustand";
+import { useCalendar, useUser } from "../store/expense-zustand";
 import ErrorOverlay from "../components/UI/ErrorOverlay";
 import LoadingOverlay from "../components/UI/LoadingOverlay";
+import { fetchCalendar } from "../util/http-two";
 
 function BudgetCalendar({ navigation }) {
   // --- Zustand function ---
@@ -15,26 +15,33 @@ function BudgetCalendar({ navigation }) {
 
   // --- Zustand Data ---
   const calendar = useCalendar((state) => state.calendar);
+  const userId = useUser((state) => state.userId);
 
   // --- Verify the data being received
-  const [isFetching, setIsFetching] = useState();
+  const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState();
 
   useEffect(() => {
     async function getCalendar() {
       setIsFetching(true);
       try {
-        // const expenses = await fetchExpenses();
-        // expensesCtx.setExpenses(expenses);
-        setCalendar(item);
+        const calendarBudget = await fetchCalendar(userId);
+        setCalendar(calendarBudget);
       } catch (error) {
         setError("Could not fetch calendar expenses!");
       }
 
       setIsFetching(false);
     }
-    getCalendar();
-  }, [setCalendar]);
+
+    console.log("Length: ", Object.keys(calendar).length);
+
+    if (Object.keys(calendar).length === 0) {
+      getCalendar();
+    }
+  }, [calendar]);
+
+  console.log("Data from Zustand:", calendar);
 
   function errorHandler() {
     setError(null);
@@ -48,12 +55,17 @@ function BudgetCalendar({ navigation }) {
     return <LoadingOverlay />;
   }
 
+  // if (Object.keys(calendar).length === 0) {
+  //   return <Text style={styles.text}>No budget placed on calendar yet!</Text>;
+  // }
+
   function renderItem(itemData) {
     return (
       <BudgetCalendarItem
         payment={itemData.amount}
         title={itemData.title}
         date={itemData.date}
+        id={itemData.id}
       />
     );
   }
@@ -96,6 +108,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: GlobalStyles.colors.primary700,
+  },
+  text: {
+    color: "white",
+    fontWeight: "bold",
   },
 });
 

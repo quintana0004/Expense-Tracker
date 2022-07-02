@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { GlobalStyles } from "../../constants/style";
 
-function BudgetCalendarItem({ title, payment, date }) {
+function BudgetCalendarItem({ title, payment, date, id }) {
   const navigation = useNavigation();
 
   function editCalendarItemHandler() {
@@ -11,6 +11,7 @@ function BudgetCalendarItem({ title, payment, date }) {
       dateKey: date,
       titleKey: title,
       amountKey: payment,
+      idKey: id,
     });
   }
 

@@ -1,12 +1,9 @@
 import React from "react";
-import { View, StyleSheet, Text } from "react-native";
-import { useContext } from "react";
+import { StyleSheet } from "react-native";
 import ExpensesOutput from "../components/ExpensesOutput/ExpensesOutput";
-import { ExpensesContext } from "../store/expense-context";
 import { useExpense } from "../store/expense-zustand";
 
 const AllExpenses = () => {
-  const expensesCtx = useContext(ExpensesContext);
   const expenses = useExpense((state) => state.expenses);
   return (
     <ExpensesOutput
