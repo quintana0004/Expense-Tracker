@@ -82,9 +82,9 @@ export async function addExpenses(userId, expenseData) {
   return id;
 }
 
-export function deleteExpenses(userId, expenseid) {
+export function deleteExpenses(userId, expenseId) {
   return axios.delete(
-    BACKEND_URL + `/users/${userId}/expenses/${expenseid}.json`
+    BACKEND_URL + `/users/${userId}/expenses/${expenseId}.json`
   );
 }
 
@@ -113,7 +113,7 @@ export async function fetchCalendar(userId) {
         id: key,
       });
     } else {
-      calendar[date].push({
+      calendarExpenses[date].push({
         title: response.data[key].title,
         date: response.data[key].date,
         amount: response.data[key].amount,
@@ -141,7 +141,7 @@ export async function addCalendarExpense(userId, title, amount, date) {
 }
 
 export function updateCalendarExpense(userId, calendarId, calendarData) {
-  console.log(calendarId);
+  console.log("Calendar Id: ", calendarId);
   return axios.put(
     BACKEND_URL + `/users/${userId}/calendar/${calendarId}.json`,
     calendarData
@@ -149,7 +149,9 @@ export function updateCalendarExpense(userId, calendarId, calendarData) {
 }
 
 export function deleteCalendarExpense(userId, calendarId) {
-  return axios.delete(BACKEND_URL + `/users/${userId}/calendar/${calendarId}`);
+  return axios.delete(
+    BACKEND_URL + `/users/${userId}/calendar/${calendarId}.json`
+  );
 }
 
 export async function fetchBudget(userId) {}

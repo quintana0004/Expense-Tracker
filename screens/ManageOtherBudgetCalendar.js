@@ -1,4 +1,4 @@
-import react, { useState } from "react";
+import { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Input from "../components/ManageExpense/Input";
 import Button from "../components/UI/Button";
@@ -23,7 +23,7 @@ function ManageOtherBudgetCalendar({ route, navigation }) {
   const amountProvided = obj.amountKey;
   const dateProvided = obj.dateKey;
   const titleProvided = obj.titleKey;
-  const idProvided = obj.idProvided;
+  const idProvided = obj.idKey;
 
   // --- Date changed with string format ---
   const dateString = getStringFormatDate(dateProvided);
@@ -73,6 +73,7 @@ function ManageOtherBudgetCalendar({ route, navigation }) {
             calendar[dateProvided][i].title === titleProvided &&
             calendar[dateProvided][i].amount === amountProvided
           ) {
+            console.log("CALENDAR ID ON UPDATE:", idProvided);
             await updateCalendarExpense(userId, idProvided, {
               title: title,
               amount: amount_Modified,
@@ -122,6 +123,7 @@ function ManageOtherBudgetCalendar({ route, navigation }) {
         }
       }
     } catch (error) {
+      console.log("Error at Delete Budget Item: ", error);
       setError("Could not delete data - please try again later!");
       setIsSubmitting(false);
     }

@@ -21,6 +21,19 @@ function BudgetCalendar({ navigation }) {
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState();
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: ({ tintColor }) => (
+        <IconButton
+          color={tintColor}
+          icon="add-circle"
+          size={24}
+          onPress={addInfoHandler}
+        />
+      ),
+    });
+  });
+
   useEffect(() => {
     async function getCalendar() {
       setIsFetching(true);
@@ -28,20 +41,17 @@ function BudgetCalendar({ navigation }) {
         const calendarBudget = await fetchCalendar(userId);
         setCalendar(calendarBudget);
       } catch (error) {
-        setError("Could not fetch calendar expenses!");
+        console.log("Error at Fetching Calendar: ", error);
+        setError("Could not fetch calendar budget!");
       }
 
       setIsFetching(false);
     }
 
-    console.log("Length: ", Object.keys(calendar).length);
-
     if (Object.keys(calendar).length === 0) {
       getCalendar();
     }
   }, [calendar]);
-
-  console.log("Data from Zustand:", calendar);
 
   function errorHandler() {
     setError(null);
@@ -60,6 +70,8 @@ function BudgetCalendar({ navigation }) {
   // }
 
   function renderItem(itemData) {
+    console.log("Render Item Data: ", itemData);
+    console.log("Render Item Id: ", itemData.id);
     return (
       <BudgetCalendarItem
         payment={itemData.amount}
@@ -73,19 +85,6 @@ function BudgetCalendar({ navigation }) {
   function addInfoHandler() {
     return navigation.navigate("ManageAddBudgetCalendar");
   }
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: ({ tintColor }) => (
-        <IconButton
-          color={tintColor}
-          icon="add-circle"
-          size={24}
-          onPress={addInfoHandler}
-        />
-      ),
-    });
-  });
 
   return (
     <SafeAreaView style={styles.container}>
