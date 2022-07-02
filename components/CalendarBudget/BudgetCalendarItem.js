@@ -1,16 +1,16 @@
-import react from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { GlobalStyles } from "../../constants/style";
 
-function BudgetCalendarItem({ title, payment, date }) {
+function BudgetCalendarItem({ title, payment, date, id }) {
   const navigation = useNavigation();
 
   function editCalendarItemHandler() {
+    console.log("Edit Calendar Item Id: ", id);
     return navigation.navigate("ManageOtherBudgetCalendar", {
       dateKey: date,
       titleKey: title,
       amountKey: payment,
+      idKey: id,
     });
   }
 

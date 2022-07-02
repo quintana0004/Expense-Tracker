@@ -1,31 +1,137 @@
-import react from "react";
-import { StyleSheet, View, Text } from "react-native";
+import { useEffect, useState } from "react";
+import { StyleSheet, View, Text, Alert } from "react-native";
 import { GlobalStyles } from "../constants/style";
 import Input from "../components/ManageExpense/Input";
 import Button from "../components/UI/Button";
+import useCheckExistingUser from "../hooks/useCheckExistingUser";
 
 function Login({ navigation }) {
+  const {
+    setEmailUser,
+    setPasswordUser,
+    isCheckedUser,
+    isValid,
+    errorMessage,
+  } = useCheckExistingUser();
+
+  // --- Verify the Email ---
+  const [verifyEmail, setVerifyEmail] = useState(false);
+  const [email, setEmail] = useState("");
+
+  // --- Verify the Password ---
+  const [verifyPassword, setVerifyPassword] = useState(false);
+  const [password, setPassword] = useState("");
+
+  // --- Will re-render component ---
+  useEffect(() => {
+    if (!isCheckedUser) {
+      if (errorMessage === "" && isValid.valid) {
+        setEmailUser("");
+        setPasswordUser("");
+        setEmail("");
+        setPassword("");
+        return navigation.navigate("ExpensesOverview");
+      } else {
+        if (!isValid.valid) {
+          setVerifyEmail(true);
+          setVerifyPassword(true);
+          Alert.alert("Something went wrong!", isValid.message, [
+            { text: "Okay", onPress: () => console.log("Okay Pressed") },
+          ]);
+        } else {
+          Alert.alert("Something went wrong!", errorMessage, [
+            { text: "Okay", onPress: () => console.log("Okay Pressed") },
+          ]);
+        }
+      }
+    }
+  }, [isCheckedUser]);
+
   function enterAccount() {
-    return navigation.navigate("RecentExpenses");
+    const modifiedEmail = email.trim();
+    const modifiedPassword = password.trim();
+
+    let emailIsValid =
+      modifiedEmail.includes("@") && modifiedEmail.length !== 0;
+    let passwordIsValid =
+      modifiedPassword.length >= 6 && modifiedPassword.length !== 0;
+
+    setVerifyEmail(!emailIsValid);
+    setVerifyPassword(!passwordIsValid);
+
+    const isValidFields = validateFields(emailIsValid, passwordIsValid);
+
+    if (!isValidFields.valid) {
+      Alert.alert("Something went wrong!", isValidFields.message, [
+        {
+          text: "Okay",
+          onPress: () => {
+            console.log("Okay Pressed");
+          },
+        },
+      ]);
+    } else {
+      setEmailUser(modifiedEmail);
+      setPasswordUser(modifiedPassword);
+    }
+  }
+
+  function validateFields(emailIsValid, passwordIsValid) {
+    let validResponse = { valid: true, message: "" };
+
+    if (!emailIsValid && !passwordIsValid) {
+      validResponse = {
+        valid: false,
+        message:
+          "Both email and password are invalid.\n Please provide a valid email address and a password with a length of 6 characters or more.",
+      };
+    } else {
+      if (!emailIsValid) {
+        validResponse = {
+          valid: false,
+          message: "The email entered is invalid, please try again.",
+        };
+      } else {
+        if (!passwordIsValid) {
+          validResponse = {
+            valid: false,
+            message: "Password is invalid, must have a length of 6 or more.",
+          };
+        }
+      }
+    }
+
+    return validResponse;
   }
 
   function signInPage() {
     return navigation.navigate("SignIn");
   }
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Log In</Text>
       <View style={styles.box1}>
         <Input
           label="Email"
+          invalid={verifyEmail}
           textInputConfig={{
             placeholder: "email@address.com",
             keyboardType: "email-address",
+            onChangeText: (email) => setEmail(email),
+            value: email,
           }}
         />
       </View>
       <View style={styles.box2}>
-        <Input label="Password" />
+        <Input
+          label="Password"
+          invalid={verifyPassword}
+          textInputConfig={{
+            onChangeText: (password) => setPassword(password),
+            value: password,
+          }}
+        />
       </View>
       <View style={styles.box3}>
         <Button onPress={enterAccount}>LOGIN</Button>

@@ -1,27 +1,32 @@
-import React, { useContext, useEffect, useState } from "react";
-import { StyleSheet } from "react-native";
-import { ExpensesContext } from "../store/expense-context";
+import React, { useEffect, useState } from "react";
 import ExpensesOutput from "../components/ExpensesOutput/ExpensesOutput";
 import { getDateMinusDays } from "../util/date";
-import { fetchExpenses } from "../util/http";
 import LoadingOverlay from "../components/UI/LoadingOverlay";
 import ErrorOverlay from "../components/UI/ErrorOverlay";
+import { useExpense, useUser } from "../store/expense-zustand";
+import { fetchExpenses } from "../util/http-two";
 
-const RecentExpenses = () => {
-  const [isFetching, setIsFetching] = useState();
+function RecentExpenses() {
+  //--- Zustand Functions ---
+  const setExpense = useExpense((state) => state.setExpense);
+  const expenses = useExpense((state) => state.expenses);
+  const userId = useUser((state) => state.userId);
+
+  const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState();
-  const expensesCtx = useContext(ExpensesContext);
+  // const expensesCtx = useContext(ExpensesContext);
 
   useEffect(() => {
     async function getExpenses() {
-      setIsFetching(true);
       try {
-        const expenses = await fetchExpenses();
-        expensesCtx.setExpenses(expenses);
+        // const expenses = await fetchExpenses();
+        // expensesCtx.setExpenses(expenses);
+        const expenseResult = await fetchExpenses(userId);
+        console.log("My Expenses:", expenseResult);
+        setExpense(expenseResult);
       } catch (error) {
         setError("Could not fetch expenses!");
       }
-
       setIsFetching(false);
     }
     getExpenses();
@@ -39,7 +44,13 @@ const RecentExpenses = () => {
     return <LoadingOverlay />;
   }
 
-  const recentExpenses = expensesCtx.expenses.filter((expense) => {
+  // const recentExpenses = expensesCtx.expenses.filter((expense) => {
+  //   const today = new Date();
+  //   const date7DaysAgo = getDateMinusDays(today, 7);
+  //   return expense.date > date7DaysAgo && expense.date <= today;
+  // });
+
+  const recentExpenses = expenses.filter((expense) => {
     const today = new Date();
     const date7DaysAgo = getDateMinusDays(today, 7);
     return expense.date > date7DaysAgo && expense.date <= today;
@@ -54,8 +65,6 @@ const RecentExpenses = () => {
       fallbackText="No expenses registered for the 7 days"
     />
   );
-};
-
-const style = StyleSheet.create({});
+}
 
 export default RecentExpenses;
