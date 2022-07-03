@@ -57,7 +57,7 @@ function BudgetWeekAdd({ navigation, route }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(false);
 
-  async function inputVerification() {
+  function inputVerification() {
     // I. Set all data needed to be later be passed on the "budget"
     // Date Modification
     let initialDate = `${initialYear}-${initialMonth}-${initialDay}`;
@@ -120,10 +120,10 @@ function BudgetWeekAdd({ navigation, route }) {
           },
           {
             text: "Submit",
-            onPress: () => {
+            onPress: async () => {
               setIsSubmitting(true);
               try {
-                const id = addBudgetExpenses(userId, {
+                const id = await addBudgetExpenses(userId, {
                   initialDate: date_Modified_initial.toISOString().slice(0, 10),
                   lastDate: date_Modified_last.toISOString().slice(0, 10),
                   initialBudget: amount_Modified,

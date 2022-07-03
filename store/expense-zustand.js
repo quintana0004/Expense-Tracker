@@ -86,13 +86,16 @@ export const useBudget = create((set) => ({
       })
     ),
   setBudget: (budgetData) => set({ budget: budgetData }),
-  updateBudgetBalance: (balance, index) =>
+  updateBudgetBalance: (balance, id) =>
     set(
       produce((draft) => {
-        const updatableBudget = draft.budget[index];
+        const updateBudgetIndex = draft.budget.findIndex(
+          (budgets) => budgets.id === id
+        );
+        const updatableBudget = draft.budget[updateBudgetIndex];
         const updatableItem = { ...updatableBudget, ...balance };
         const updatedBudget = [...draft.budget];
-        updatedBudget[index] = updatableItem;
+        updatedBudget[updateBudgetIndex] = updatableItem;
         draft.budget = updatedBudget;
       })
     ),

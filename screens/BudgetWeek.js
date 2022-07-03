@@ -32,7 +32,6 @@ function BudgetWeek({ navigation }) {
   const [isUpdating, setIsUpdating] = useState(false);
 
   useLayoutEffect(() => {
-    console.log("--- USE LAYAOUT RUNNING ---");
     navigation.setOptions({
       headerRight: ({ tintColor }) => (
         <IconButton
@@ -46,11 +45,10 @@ function BudgetWeek({ navigation }) {
   }, [activation]);
 
   useEffect(() => {
-    console.log("--- USE EFFECT ONE RUNNING ---");
     async function getBudget() {
       try {
         const budgetResult = await fetchBudgetExpenses(userId);
-        console.log("BUDGET RESULT: ", budgetResult);
+
         setBudget(budgetResult);
       } catch (error) {
         setError("Could not fetch the budget!");
@@ -62,12 +60,7 @@ function BudgetWeek({ navigation }) {
 
   // --- Verify the last data entered---
   useEffect(() => {
-    console.log("--- USE EFFECT two RUNNING ---");
-    console.log("Before calculation");
-    console.log("IS FETCHING: ", isFetching);
-    console.log("BUDGET LENGTH: ", budget.length);
     if (budget.length != 0 && !isFetching) {
-      console.log("Entered calculation");
       const last = budget.length - 1;
       setRecentBudgetValue(budget[last].initialBudget);
       setBalance(budget[last].leftbudget);
@@ -91,7 +84,7 @@ function BudgetWeek({ navigation }) {
           ...budget[last],
           leftbudget: balanceNew,
         });
-        updateBudgetBalance({ leftbudget: balanceNew }, last);
+        updateBudgetBalance({ leftbudget: balanceNew }, budget[last].id);
       }
     }
   }, [isFetching, expenses, budget.length]);
@@ -133,19 +126,10 @@ function BudgetWeek({ navigation }) {
         subtractTotal = subtractTotal + item.amount;
       }
     }
-    console.log("Recent Budget", recentBudgetValue);
-    console.log("Subtract Total", subtractTotal);
+
     const balance = recentBudgetValue - subtractTotal;
     return balance;
   }
-
-  // if (budget.length === 0) {
-  //   return (
-  //     <Text style={styles.title2}>
-  //       There is no budget placed yet, please enter new budget!
-  //     </Text>
-  //   );
-  // }
 
   return (
     <View style={styles.container}>
