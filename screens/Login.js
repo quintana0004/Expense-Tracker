@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, View, Text, Alert } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from "react-native";
 import { GlobalStyles } from "../constants/style";
 import Input from "../components/ManageExpense/Input";
 import Button from "../components/UI/Button";
@@ -109,52 +118,59 @@ function Login({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Log In</Text>
-      <View style={styles.box1}>
-        <Input
-          label="Email"
-          invalid={verifyEmail}
-          textInputConfig={{
-            placeholder: "email@address.com",
-            keyboardType: "email-address",
-            onChangeText: (email) => setEmail(email),
-            value: email,
-          }}
-        />
-      </View>
-      <View style={styles.box2}>
-        <Input
-          label="Password"
-          invalid={verifyPassword}
-          textInputConfig={{
-            onChangeText: (password) => setPassword(password),
-            value: password,
-          }}
-        />
-      </View>
-      <View style={styles.box3}>
-        <Button onPress={enterAccount}>LOGIN</Button>
-      </View>
-      <View style={styles.box4}>
-        <Text style={styles.text1}>Don't have an account? </Text>
-        <Text style={styles.text2} onPress={signInPage}>
-          Sign Up
-        </Text>
-      </View>
-    </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.contain}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+          <Text style={styles.text}>Log In</Text>
+          <View style={styles.box1}>
+            <Input
+              label="Email"
+              invalid={verifyEmail}
+              textInputConfig={{
+                placeholder: "email@address.com",
+                keyboardType: "email-address",
+                onChangeText: (email) => setEmail(email),
+                value: email,
+              }}
+            />
+          </View>
+          <View style={styles.box2}>
+            <Input
+              label="Password"
+              invalid={verifyPassword}
+              textInputConfig={{
+                onChangeText: (password) => setPassword(password),
+                value: password,
+              }}
+            />
+          </View>
+          <View style={styles.box3}>
+            <Button onPress={enterAccount}>LOGIN</Button>
+          </View>
+          <View style={styles.box4}>
+            <Text style={styles.text1}>Don't have an account? </Text>
+            <Text style={styles.text2} onPress={signInPage}>
+              Sign Up
+            </Text>
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: GlobalStyles.colors.primary400 },
+  container: { padding: 30, flex: 1, justifyContent: "center" },
   image: { flex: 1, justifyContent: "center" },
   text: {
     color: "white",
     fontSize: 30,
     fontWeight: "bold",
     textAlign: "center",
-    marginTop: "50%",
+    marginTop: "10%",
     marginBottom: 30,
   },
   box1: {
@@ -186,6 +202,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
   },
+  contain: { flex: 1, backgroundColor: GlobalStyles.colors.primary400 },
 });
 
 export default Login;
