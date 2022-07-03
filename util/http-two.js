@@ -16,7 +16,6 @@ export async function checkIfExistingEmail(email) {
   const response = await axios.get(BACKEND_URL + "/users.json");
 
   for (const key in response.data) {
-    console.log("Emails: ", response.data[key].email);
     if (response.data[key].email === email && email.length !== 0) {
       return false;
     }
@@ -52,7 +51,6 @@ export async function fetchExpenses(userId) {
 
   const expences = [];
 
-  console.log(response.data);
   for (const key in response.data) {
     const expenseObj = {
       id: key,
@@ -61,8 +59,6 @@ export async function fetchExpenses(userId) {
       description: response.data[key].description,
     };
 
-    console.log(response.data[key].date);
-    console.log(new Date(response.data[key].date));
     expences.push(expenseObj);
   }
 
@@ -76,8 +72,6 @@ export async function addExpenses(userId, expenseData) {
   );
 
   const id = response.data.name;
-
-  console.log("Item Expense ID: ", id);
 
   return id;
 }
@@ -122,7 +116,6 @@ export async function fetchCalendar(userId) {
     }
   }
 
-  console.log("Calendar Expense:", calendarExpenses);
   return calendarExpenses;
 }
 
@@ -173,8 +166,6 @@ export async function fetchBudgetExpenses(userId) {
 
     budgets.push(budgetObj);
   }
-
-  console.log(budgets);
 
   return budgets;
 }
