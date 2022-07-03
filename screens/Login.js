@@ -120,6 +120,7 @@ function Login({ navigation }) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={-100}
       style={styles.contain}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -163,7 +164,7 @@ function Login({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 30, flex: 1, justifyContent: "center" },
+  container: { padding: 24, flex: 1, justifyContent: "center" },
   image: { flex: 1, justifyContent: "center" },
   text: {
     color: "white",
@@ -179,10 +180,10 @@ const styles = StyleSheet.create({
   },
   box2: {
     marginHorizontal: 40,
-    marginBottom: 40,
+    marginBottom: 20,
   },
   box3: {
-    marginBottom: 55,
+    marginBottom: 20,
     marginHorizontal: 80,
     borderColor: GlobalStyles.colors.primary50,
     borderWidth: 2,

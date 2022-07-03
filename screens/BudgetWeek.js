@@ -29,6 +29,8 @@ function BudgetWeek({ navigation }) {
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState("");
 
+  const [isUpdating, setIsUpdating] = useState(false);
+
   useLayoutEffect(() => {
     console.log("--- USE LAYAOUT RUNNING ---");
     navigation.setOptions({
@@ -82,7 +84,7 @@ function BudgetWeek({ navigation }) {
         setCard(false);
       }
 
-      if (!activation) {
+      if (!activation && !isUpdating) {
         const balanceNew = totalSubtract(startDate, lastDate);
         setBalance(balanceNew);
         updateBalance(userId, budget[last].id, {
@@ -92,10 +94,16 @@ function BudgetWeek({ navigation }) {
         updateBudgetBalance({ leftbudget: balanceNew }, last);
       }
     }
-  }, [isFetching, expenses]);
+  }, [isFetching, expenses, budget.length]);
 
   async function updateBalance(userId, budgetId, budgetData) {
-    await updateBudgetExpenses(userId, budgetId, budgetData);
+    setIsUpdating(true);
+    try {
+      await updateBudgetExpenses(userId, budgetId, budgetData);
+    } catch (error) {
+      setError("Could not update budget - please try again!");
+    }
+    setIsUpdating(false);
   }
 
   function errorHandler() {
