@@ -15,7 +15,7 @@ function BudgetItem({ inititalDate, lastDate, amount, leftAmount }) {
         <Text>Initial Date: {inititalDate}</Text>
         <Text>Last Date: {lastDate}</Text>
         <Text>Initial Amount: {amount}</Text>
-        <Text>Left Amount: {leftAmount}</Text>
+        <Text>Left Amount: {Number(leftAmount).toFixed(2)}</Text>
       </View>
     </View>
   );
