@@ -1,6 +1,6 @@
 # :heavy_dollar_sign: Expense-Tracker-App
 
-This application is made with React Native using Expo, Zustand and Expo.
+This application is made with React Native using Expo, Zustand and Firebase.
 
 ## :information_source: About App
 
